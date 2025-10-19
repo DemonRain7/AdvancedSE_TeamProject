@@ -21,9 +21,6 @@ jobs:
         distribution: 'temurin'
         cache: maven
 
-    - name: Grant execute permission for mvnw
-      run: chmod +x CouponSystem/mvnw
-
     - name: Build and test with Maven (includes Checkstyle validation)
       run: mvn -B clean package -f CouponSystem/pom.xml
       continue-on-error: true
@@ -31,6 +28,7 @@ jobs:
     - name: Run PMD analysis
       run: mvn -B pmd:pmd pmd:cpd -f CouponSystem/pom.xml
       continue-on-error: true
+      working-directory: .
 
     - name: Upload coverage to Codecov (optional)
       uses: codecov/codecov-action@v4
@@ -69,4 +67,3 @@ jobs:
         name: pmd-report
         path: CouponSystem/target/pmd.xml
       continue-on-error: true
-
