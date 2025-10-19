@@ -21,9 +21,6 @@ jobs:
         distribution: 'temurin'
         cache: maven
 
-    - name: Grant execute permission for mvnw
-      run: chmod +x CouponSystem/mvnw
-
     - name: Build and test with Maven (includes Checkstyle validation)
       run: mvn -B clean package -f CouponSystem/pom.xml
       continue-on-error: true
