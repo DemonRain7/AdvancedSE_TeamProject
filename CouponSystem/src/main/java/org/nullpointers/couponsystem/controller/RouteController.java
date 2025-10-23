@@ -27,10 +27,14 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 public class RouteController {
+  private final DataService dataService;
+  private final CouponService couponService;
+
   @Autowired
-  private DataService dataService;
-  @Autowired
-  private CouponService couponService;
+  public RouteController(DataService dataService, CouponService couponService) {
+    this.dataService = dataService;
+    this.couponService = couponService;
+  }
 
   @GetMapping({"/", "/index"})
   public String index() {
