@@ -602,6 +602,804 @@ No third-party code is directly included in the repository. All dependencies are
 - All data is lost when the application restarts
 - Suitable for development and testing; production use would require a database
 
+## API Testing
+
+We test our API by starting the service and running individual API calls through Postman. The testing approach is manual and comprehensive, covering all endpoints with valid, atypical, and invalid inputs.
+
+### Automated Testing Script
+
+For convenience, we provide a comprehensive automated test script that runs all tests using curl:
+
+```bash
+# Start the application first
+cd CouponSystem
+./mvnw spring-boot:run
+
+# In another terminal, run the automated test suite
+./test-api.sh
+```
+
+The `test-api.sh` script will:
+- Run all 75+ test cases covering all 20 API endpoints
+- Test with typical valid, atypical valid, and invalid inputs
+- Verify WRITE/READ persistent data operations
+- Test multi-client functionality
+- Display color-coded PASS/FAIL results
+- Provide a comprehensive summary of test coverage
+
+If not using the automated script, you can also run individual API calls manually using Postman or curl commands (see test cases below).
+
+### Testing Methodology
+
+#### Prerequisites
+
+1. Start the application:
+   ```bash
+   cd CouponSystem
+   ./mvnw spring-boot:run
+   ```
+
+2. Wait for the startup message: `Started CouponSystemApplication in X seconds`
+
+3. The application will be available at `http://localhost:8080`
+
+4. Use Postman or curl to make API calls
+
+#### Logging Verification
+
+Spring Boot automatically logs all HTTP requests to the console. To verify logging:
+- Monitor the console output where the application is running
+- Each API call will generate log entries showing the HTTP method, endpoint, and response status
+- Look for lines like: `INFO ... Mapped GET "/stores" ...`
+
+### Comprehensive Test Suite
+
+The following test suite covers all API endpoints with at least three test cases each (typical valid, atypical valid, and invalid inputs). Tests also verify persistent data storage/retrieval and multi-client functionality.
+
+---
+
+#### 1. Index Endpoint Tests
+
+**GET / or GET /index**
+
+Test 1.1 - Typical valid input (GET /)
+```bash
+# Test accessing root endpoint
+curl http://localhost:8080/
+# Expected: "Welcome to the Coupon Management System!..."
+```
+
+Test 1.2 - Atypical valid input (GET /index)
+```bash
+# Test accessing index endpoint
+curl http://localhost:8080/index
+# Expected: Same welcome message
+```
+
+Test 1.3 - Invalid input (POST to read-only endpoint)
+```bash
+# Test invalid method
+curl -X POST http://localhost:8080/
+# Expected: 405 Method Not Allowed
+```
+
+---
+
+#### 2. Store Endpoints Tests
+
+**POST /store - Create Store**
+
+Test 2.1 - Typical valid input (normal store name)
+```bash
+# Test creating store with typical name
+curl -X POST http://localhost:8080/store \
+  -H "Content-Type: application/json" \
+  -d '{"name": "BookMart"}'
+# Expected: {"id":1,"name":"BookMart"} with 201 CREATED
+# This is a WRITE operation - data is persisted
+```
+
+Test 2.2 - Atypical valid input (store name with special characters/spaces)
+```bash
+# Test creating store with unusual but valid name
+curl -X POST http://localhost:8080/store \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Tech-World & More!"}'
+# Expected: {"id":2,"name":"Tech-World & More!"} with 201 CREATED
+```
+
+Test 2.3 - Invalid input (empty store name)
+```bash
+# Test creating store with empty name
+curl -X POST http://localhost:8080/store \
+  -H "Content-Type: application/json" \
+  -d '{"name": ""}'
+# Expected: 400 BAD REQUEST with error message
+```
+
+**GET /store/{id} - Get Store**
+
+Test 2.4 - Typical valid input (existing store ID)
+```bash
+# Test retrieving existing store (READ operation - verifies persistence)
+curl http://localhost:8080/store/1
+# Expected: {"id":1,"name":"BookMart"} with 200 OK
+# This is a READ operation - verifies data from Test 2.1 was persisted
+```
+
+Test 2.5 - Atypical valid input (large store ID that exists)
+```bash
+# Test retrieving store with atypical but valid ID
+curl http://localhost:8080/store/2
+# Expected: {"id":2,"name":"Tech-World & More!"} with 200 OK
+```
+
+Test 2.6 - Invalid input (non-existent store ID)
+```bash
+# Test retrieving non-existent store
+curl http://localhost:8080/store/99999
+# Expected: "Store not found." with 404 NOT FOUND
+```
+
+**GET /stores - Get All Stores**
+
+Test 2.7 - Typical valid input (retrieve all stores)
+```bash
+# Test retrieving all stores (READ operation - verifies all persisted stores)
+curl http://localhost:8080/stores
+# Expected: Array containing all created stores with 200 OK
+# Verifies data from Tests 2.1 and 2.2 were persisted
+```
+
+Test 2.8 - Atypical valid input (GET all when no stores exist - requires clean state)
+```bash
+# Note: This would need to be tested on fresh startup before creating stores
+# Expected: Empty array [] with 200 OK
+```
+
+Test 2.9 - Invalid input (GET with invalid path parameter)
+```bash
+# Test invalid endpoint variation
+curl http://localhost:8080/stores/invalid
+# Expected: 404 NOT FOUND (endpoint doesn't exist)
+```
+
+**DELETE /store/{id} - Delete Store**
+
+Test 2.10 - Typical valid input (delete existing store)
+```bash
+# Test deleting existing store (WRITE operation - modifies persistence)
+curl -X DELETE http://localhost:8080/store/2
+# Expected: "Store deleted successfully." with 200 OK
+```
+
+Test 2.11 - Atypical valid input (delete already deleted store)
+```bash
+# Test deleting same store again
+curl -X DELETE http://localhost:8080/store/2
+# Expected: "Store not found." with 404 NOT FOUND
+```
+
+Test 2.12 - Invalid input (delete with invalid ID format)
+```bash
+# Test delete with non-numeric ID
+curl -X DELETE http://localhost:8080/store/abc
+# Expected: 400 BAD REQUEST
+```
+
+---
+
+#### 3. Item Endpoints Tests
+
+**POST /item - Create Item**
+
+Test 3.1 - Typical valid input (normal item)
+```bash
+# Test creating typical item (WRITE operation)
+curl -X POST http://localhost:8080/item \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Java Programming", "price": 45.99, "storeId": 1, "category": "books"}'
+# Expected: {"id":1,"name":"Java Programming","price":45.99,"storeId":1,"category":"books"} with 201 CREATED
+```
+
+Test 3.2 - Atypical valid input (item with very high price and long name)
+```bash
+# Test creating item with extreme but valid values
+curl -X POST http://localhost:8080/item \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Super Premium Ultra Deluxe Collectors Edition Complete Programming Encyclopedia", "price": 99999.99, "storeId": 1, "category": "books"}'
+# Expected: Item created with 201 CREATED
+```
+
+Test 3.3 - Invalid input (item with non-existent store)
+```bash
+# Test creating item with invalid storeId
+curl -X POST http://localhost:8080/item \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Invalid Item", "price": 10.00, "storeId": 99999, "category": "books"}'
+# Expected: "Store does not exist." with 400 BAD REQUEST
+```
+
+**GET /item/{id} - Get Item**
+
+Test 3.4 - Typical valid input (existing item)
+```bash
+# Test retrieving existing item (READ operation - verifies persistence)
+curl http://localhost:8080/item/1
+# Expected: {"id":1,"name":"Java Programming",...} with 200 OK
+# Verifies data from Test 3.1 was persisted
+```
+
+Test 3.5 - Atypical valid input (item with high ID)
+```bash
+# Test retrieving item with atypical ID
+curl http://localhost:8080/item/2
+# Expected: Item object with 200 OK
+```
+
+Test 3.6 - Invalid input (non-existent item)
+```bash
+# Test retrieving non-existent item
+curl http://localhost:8080/item/99999
+# Expected: "Item not found." with 404 NOT FOUND
+```
+
+**GET /items - Get All Items**
+
+Test 3.7 - Typical valid input (get all items)
+```bash
+# Test retrieving all items (READ operation)
+curl http://localhost:8080/items
+# Expected: Array of all items with 200 OK
+# Verifies data from Tests 3.1 and 3.2 were persisted
+```
+
+Test 3.8 - Atypical valid input (GET all with no query params)
+```bash
+# Test endpoint with trailing slash
+curl http://localhost:8080/items/
+# Expected: Same result as Test 3.7
+```
+
+Test 3.9 - Invalid input (POST to read-only endpoint)
+```bash
+# Test invalid method
+curl -X POST http://localhost:8080/items
+# Expected: 405 Method Not Allowed
+```
+
+**GET /items/store/{storeId} - Get Items by Store**
+
+Test 3.10 - Typical valid input (existing store with items)
+```bash
+# Test retrieving items for specific store (READ operation)
+curl http://localhost:8080/items/store/1
+# Expected: Array of items from store 1 with 200 OK
+```
+
+Test 3.11 - Atypical valid input (store with no items)
+```bash
+# First create a store with no items
+curl -X POST http://localhost:8080/store \
+  -H "Content-Type: application/json" \
+  -d '{"name": "EmptyStore"}'
+# Then test retrieving its items
+curl http://localhost:8080/items/store/3
+# Expected: Empty array [] with 200 OK
+```
+
+Test 3.12 - Invalid input (non-existent store)
+```bash
+# Test retrieving items for non-existent store
+curl http://localhost:8080/items/store/99999
+# Expected: Empty array [] with 200 OK (no items from non-existent store)
+```
+
+**GET /items/search?keyword={keyword} - Search Items**
+
+Test 3.13 - Typical valid input (keyword that matches items)
+```bash
+# Test searching with common keyword
+curl "http://localhost:8080/items/search?keyword=Java"
+# Expected: Array of items containing "Java" with 200 OK
+```
+
+Test 3.14 - Atypical valid input (keyword with special characters)
+```bash
+# Test searching with special characters
+curl "http://localhost:8080/items/search?keyword=Super%20Premium"
+# Expected: Array of matching items with 200 OK
+```
+
+Test 3.15 - Invalid input (empty keyword)
+```bash
+# Test searching with empty keyword
+curl "http://localhost:8080/items/search?keyword="
+# Expected: All items or empty array with 200 OK
+```
+
+**GET /items/category/{category} - Get Items by Category**
+
+Test 3.16 - Typical valid input (existing category)
+```bash
+# Test retrieving items by category (READ operation)
+curl http://localhost:8080/items/category/books
+# Expected: Array of book items with 200 OK
+```
+
+Test 3.17 - Atypical valid input (category with mixed case)
+```bash
+# Test category with different casing
+curl http://localhost:8080/items/category/BOOKS
+# Expected: Array based on case-sensitive match (possibly empty)
+```
+
+Test 3.18 - Invalid input (non-existent category)
+```bash
+# Test retrieving items from non-existent category
+curl http://localhost:8080/items/category/nonexistent
+# Expected: Empty array [] with 200 OK
+```
+
+**DELETE /item/{id} - Delete Item**
+
+Test 3.19 - Typical valid input (delete existing item)
+```bash
+# Test deleting existing item (WRITE operation)
+curl -X DELETE http://localhost:8080/item/2
+# Expected: "Item deleted successfully." with 200 OK
+```
+
+Test 3.20 - Atypical valid input (delete already deleted item)
+```bash
+# Test deleting same item again
+curl -X DELETE http://localhost:8080/item/2
+# Expected: "Item not found." with 404 NOT FOUND
+```
+
+Test 3.21 - Invalid input (delete with negative ID)
+```bash
+# Test delete with invalid ID
+curl -X DELETE http://localhost:8080/item/-1
+# Expected: "Item not found." with 404 NOT FOUND
+```
+
+---
+
+#### 4. Coupon Endpoints Tests
+
+First, let's create some additional items for coupon tests:
+```bash
+curl -X POST http://localhost:8080/item \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Python Basics", "price": 39.99, "storeId": 1, "category": "books"}'
+
+curl -X POST http://localhost:8080/item \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Data Structures", "price": 55.00, "storeId": 1, "category": "books"}'
+```
+
+**POST /coupon - Create Coupon**
+
+Test 4.1 - Typical valid input (TotalPriceCoupon)
+```bash
+# Test creating typical TotalPriceCoupon (WRITE operation)
+curl -X POST http://localhost:8080/coupon \
+  -H "Content-Type: application/json" \
+  -d '{"type": "totalprice", "storeId": 1, "discountValue": 10.0, "isPercentage": true, "minimumPurchase": 50.0}'
+# Expected: TotalPriceCoupon object with 201 CREATED
+```
+
+Test 4.2 - Atypical valid input (CategoryCoupon with zero discount)
+```bash
+# Test creating coupon with atypical but valid discount value
+curl -X POST http://localhost:8080/coupon \
+  -H "Content-Type: application/json" \
+  -d '{"type": "category", "storeId": 1, "discountValue": 0.0, "isPercentage": false, "category": "books"}'
+# Expected: CategoryCoupon created with 201 CREATED
+```
+
+Test 4.3 - Invalid input (invalid coupon type)
+```bash
+# Test creating coupon with invalid type
+curl -X POST http://localhost:8080/coupon \
+  -H "Content-Type: application/json" \
+  -d '{"type": "invalid", "storeId": 1, "discountValue": 10.0, "isPercentage": true}'
+# Expected: "Invalid coupon type." with 400 BAD REQUEST
+```
+
+Test 4.4 - Typical valid input (CategoryCoupon)
+```bash
+# Test creating typical CategoryCoupon
+curl -X POST http://localhost:8080/coupon \
+  -H "Content-Type: application/json" \
+  -d '{"type": "category", "storeId": 1, "discountValue": 5.0, "isPercentage": false, "category": "books"}'
+# Expected: CategoryCoupon object with 201 CREATED
+```
+
+Test 4.5 - Typical valid input (ItemCoupon)
+```bash
+# Test creating typical ItemCoupon
+curl -X POST http://localhost:8080/coupon \
+  -H "Content-Type: application/json" \
+  -d '{"type": "item", "storeId": 1, "discountValue": 15.0, "isPercentage": true, "targetItemId": 1}'
+# Expected: ItemCoupon object with 201 CREATED
+```
+
+Test 4.6 - Atypical valid input (ItemCoupon with 100% discount)
+```bash
+# Test creating coupon with extreme but valid percentage
+curl -X POST http://localhost:8080/coupon \
+  -H "Content-Type: application/json" \
+  -d '{"type": "item", "storeId": 1, "discountValue": 100.0, "isPercentage": true, "targetItemId": 1}'
+# Expected: ItemCoupon created with 201 CREATED
+```
+
+**GET /coupon/{id} - Get Coupon**
+
+Test 4.7 - Typical valid input (existing coupon)
+```bash
+# Test retrieving existing coupon (READ operation - verifies persistence)
+curl http://localhost:8080/coupon/1
+# Expected: Coupon object with 200 OK
+# Verifies data from Test 4.1 was persisted
+```
+
+Test 4.8 - Atypical valid input (coupon with high ID)
+```bash
+# Test retrieving coupon with atypical ID
+curl http://localhost:8080/coupon/3
+# Expected: Coupon object with 200 OK
+```
+
+Test 4.9 - Invalid input (non-existent coupon)
+```bash
+# Test retrieving non-existent coupon
+curl http://localhost:8080/coupon/99999
+# Expected: "Coupon not found." with 404 NOT FOUND
+```
+
+**GET /coupons - Get All Coupons**
+
+Test 4.10 - Typical valid input (get all coupons)
+```bash
+# Test retrieving all coupons (READ operation)
+curl http://localhost:8080/coupons
+# Expected: Array of all coupons with 200 OK
+# Verifies data from Tests 4.1, 4.3, 4.4, 4.5 were persisted
+```
+
+Test 4.11 - Atypical valid input (GET all with Accept header)
+```bash
+# Test with explicit Accept header
+curl -H "Accept: application/json" http://localhost:8080/coupons
+# Expected: Same result as Test 4.10
+```
+
+Test 4.12 - Invalid input (DELETE on read-only endpoint)
+```bash
+# Test invalid method
+curl -X DELETE http://localhost:8080/coupons
+# Expected: 405 Method Not Allowed
+```
+
+**GET /coupons/store/{storeId} - Get Coupons by Store**
+
+Test 4.13 - Typical valid input (store with coupons)
+```bash
+# Test retrieving coupons for specific store (READ operation)
+curl http://localhost:8080/coupons/store/1
+# Expected: Array of coupons from store 1 with 200 OK
+```
+
+Test 4.14 - Atypical valid input (store with no coupons)
+```bash
+# Test retrieving coupons for store with no coupons
+curl http://localhost:8080/coupons/store/3
+# Expected: Empty array [] with 200 OK
+```
+
+Test 4.15 - Invalid input (non-existent store)
+```bash
+# Test retrieving coupons for non-existent store
+curl http://localhost:8080/coupons/store/99999
+# Expected: Empty array [] with 200 OK
+```
+
+**DELETE /coupon/{id} - Delete Coupon**
+
+Test 4.16 - Typical valid input (delete existing coupon)
+```bash
+# Test deleting existing coupon (WRITE operation)
+curl -X DELETE http://localhost:8080/coupon/2
+# Expected: "Coupon deleted successfully." with 200 OK
+```
+
+Test 4.17 - Atypical valid input (delete already deleted coupon)
+```bash
+# Test deleting same coupon again
+curl -X DELETE http://localhost:8080/coupon/2
+# Expected: "Coupon not found." with 404 NOT FOUND
+```
+
+Test 4.18 - Invalid input (delete with invalid ID format)
+```bash
+# Test delete with non-numeric ID
+curl -X DELETE http://localhost:8080/coupon/abc
+# Expected: 400 BAD REQUEST
+```
+
+---
+
+#### 5. Core Functionality Endpoints Tests
+
+**POST /cart/optimal-coupon - Find Optimal Coupon**
+
+Test 5.1 - Typical valid input (cart with multiple items)
+```bash
+# Test finding optimal coupon for typical cart (READ operation)
+curl -X POST http://localhost:8080/cart/optimal-coupon \
+  -H "Content-Type: application/json" \
+  -d '{"itemIds": [1, 3, 4], "storeId": 1}'
+# Expected: {"coupon": {...}, "discount": X.XX} with 200 OK
+# Uses persisted data from previous tests
+```
+
+Test 5.2 - Atypical valid input (cart with single item)
+```bash
+# Test finding optimal coupon for single-item cart
+curl -X POST http://localhost:8080/cart/optimal-coupon \
+  -H "Content-Type: application/json" \
+  -d '{"itemIds": [1], "storeId": 1}'
+# Expected: {"coupon": {...}, "discount": X.XX} with 200 OK
+```
+
+Test 5.3 - Invalid input (empty cart)
+```bash
+# Test finding optimal coupon for empty cart
+curl -X POST http://localhost:8080/cart/optimal-coupon \
+  -H "Content-Type: application/json" \
+  -d '{"itemIds": [], "storeId": 1}'
+# Expected: Error message with 400 BAD REQUEST
+```
+
+Test 5.4 - Invalid input (non-existent item IDs)
+```bash
+# Test with non-existent item IDs
+curl -X POST http://localhost:8080/cart/optimal-coupon \
+  -H "Content-Type: application/json" \
+  -d '{"itemIds": [99999], "storeId": 1}'
+# Expected: Error message with 400 BAD REQUEST
+```
+
+Test 5.5 - Invalid input (non-existent store)
+```bash
+# Test with non-existent store
+curl -X POST http://localhost:8080/cart/optimal-coupon \
+  -H "Content-Type: application/json" \
+  -d '{"itemIds": [1], "storeId": 99999}'
+# Expected: "No applicable coupon found." with 200 OK
+```
+
+**GET /stores/optimal - Find Optimal Stores**
+
+Test 5.6 - Typical valid input (search by category)
+```bash
+# Test finding optimal stores by category (READ operation)
+curl "http://localhost:8080/stores/optimal?category=books"
+# Expected: Array of StoreRecommendation objects with 200 OK
+# Uses persisted data from previous tests
+```
+
+Test 5.7 - Atypical valid input (search by keyword)
+```bash
+# Test finding optimal stores by keyword
+curl "http://localhost:8080/stores/optimal?keyword=Java"
+# Expected: Array of StoreRecommendation objects with 200 OK
+```
+
+Test 5.8 - Invalid input (no parameters)
+```bash
+# Test without required parameters
+curl "http://localhost:8080/stores/optimal"
+# Expected: "Either keyword or category must be provided." with 400 BAD REQUEST
+```
+
+Test 5.9 - Atypical valid input (both keyword and category)
+```bash
+# Test with both parameters
+curl "http://localhost:8080/stores/optimal?keyword=Java&category=books"
+# Expected: Array of StoreRecommendation objects with 200 OK
+```
+
+Test 5.10 - Invalid input (non-existent category)
+```bash
+# Test with non-existent category
+curl "http://localhost:8080/stores/optimal?category=nonexistent"
+# Expected: "No matching items found." with 200 OK
+```
+
+**POST /cart/suggest-items - Suggest Items**
+
+Test 5.11 - Typical valid input (cart below threshold)
+```bash
+# Test suggesting items for cart below threshold (READ operation)
+curl -X POST http://localhost:8080/cart/suggest-items \
+  -H "Content-Type: application/json" \
+  -d '{"itemIds": [3], "storeId": 1, "couponId": 1}'
+# Expected: Array of suggested items with 200 OK
+# Uses persisted data from previous tests
+```
+
+Test 5.12 - Atypical valid input (cart already meets threshold)
+```bash
+# Test suggesting items when threshold is met
+curl -X POST http://localhost:8080/cart/suggest-items \
+  -H "Content-Type: application/json" \
+  -d '{"itemIds": [1, 3, 4], "storeId": 1, "couponId": 1}'
+# Expected: "Either cart already meets threshold, or coupon is invalid." with 200 OK
+```
+
+Test 5.13 - Invalid input (non-existent coupon)
+```bash
+# Test with non-existent coupon
+curl -X POST http://localhost:8080/cart/suggest-items \
+  -H "Content-Type: application/json" \
+  -d '{"itemIds": [1], "storeId": 1, "couponId": 99999}'
+# Expected: "Either cart already meets threshold, or coupon is invalid." with 200 OK
+```
+
+Test 5.14 - Invalid input (empty cart)
+```bash
+# Test suggesting items for empty cart
+curl -X POST http://localhost:8080/cart/suggest-items \
+  -H "Content-Type: application/json" \
+  -d '{"itemIds": [], "storeId": 1, "couponId": 1}'
+# Expected: Error message with 400 BAD REQUEST
+```
+
+Test 5.15 - Invalid input (wrong coupon type - not TotalPriceCoupon)
+```bash
+# Test with ItemCoupon (not TotalPriceCoupon)
+curl -X POST http://localhost:8080/cart/suggest-items \
+  -H "Content-Type: application/json" \
+  -d '{"itemIds": [1], "storeId": 1, "couponId": 4}'
+# Expected: "Either cart already meets threshold, or coupon is invalid." with 200 OK
+```
+
+---
+
+#### 6. Multi-Client Functionality Tests
+
+These tests verify that the service can handle requests from multiple clients (represented by different stores) simultaneously and keep their data separate.
+
+**Multi-Client Test Setup**
+
+```bash
+# Client 1: Create store and items
+curl -X POST http://localhost:8080/store \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Client1Store"}'
+# Expected: {"id":4,"name":"Client1Store"}
+
+curl -X POST http://localhost:8080/item \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Client1Item", "price": 25.00, "storeId": 4, "category": "electronics"}'
+# Expected: {"id":5,"name":"Client1Item",...}
+
+# Client 2: Create store and items
+curl -X POST http://localhost:8080/store \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Client2Store"}'
+# Expected: {"id":5,"name":"Client2Store"}
+
+curl -X POST http://localhost:8080/item \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Client2Item", "price": 30.00, "storeId": 5, "category": "electronics"}'
+# Expected: {"id":6,"name":"Client2Item",...}
+```
+
+Test 6.1 - Multi-client: Verify Client 1 data isolation
+```bash
+# Test that Client 1 can only see their own items (READ operation)
+curl http://localhost:8080/items/store/4
+# Expected: Array containing only Client1Item, not Client2Item
+# Verifies multi-client data isolation
+```
+
+Test 6.2 - Multi-client: Verify Client 2 data isolation
+```bash
+# Test that Client 2 can only see their own items (READ operation)
+curl http://localhost:8080/items/store/5
+# Expected: Array containing only Client2Item, not Client1Item
+# Verifies multi-client data isolation
+```
+
+Test 6.3 - Multi-client: Concurrent coupon creation
+```bash
+# Client 1 creates coupon
+curl -X POST http://localhost:8080/coupon \
+  -H "Content-Type: application/json" \
+  -d '{"type": "totalprice", "storeId": 4, "discountValue": 5.0, "isPercentage": false, "minimumPurchase": 20.0}'
+# Expected: Coupon for Client 1 with 201 CREATED
+
+# Client 2 creates coupon
+curl -X POST http://localhost:8080/coupon \
+  -H "Content-Type: application/json" \
+  -d '{"type": "totalprice", "storeId": 5, "discountValue": 10.0, "isPercentage": true, "minimumPurchase": 25.0}'
+# Expected: Coupon for Client 2 with 201 CREATED
+# Verifies both clients can create coupons independently
+```
+
+Test 6.4 - Multi-client: Verify coupon isolation
+```bash
+# Verify Client 1's coupons
+curl http://localhost:8080/coupons/store/4
+# Expected: Array with only Client 1's coupon
+
+# Verify Client 2's coupons
+curl http://localhost:8080/coupons/store/5
+# Expected: Array with only Client 2's coupon
+# Verifies coupon data isolation between clients
+```
+
+Test 6.5 - Multi-client: Cross-client cart operation (should not work)
+```bash
+# Test Client 1 trying to use items from Client 2's store
+curl -X POST http://localhost:8080/cart/optimal-coupon \
+  -H "Content-Type: application/json" \
+  -d '{"itemIds": [6], "storeId": 4}'
+# Expected: Error or "No applicable coupon found."
+# Verifies clients cannot interfere with each other
+```
+
+Test 6.6 - Multi-client: Independent store operations
+```bash
+# Client 1 deletes their item
+curl -X DELETE http://localhost:8080/item/5
+# Expected: "Item deleted successfully."
+
+# Verify Client 2's items are unaffected
+curl http://localhost:8080/items/store/5
+# Expected: Array still containing Client2Item
+# Verifies one client's operations don't affect another
+```
+
+---
+
+### Test Execution Notes
+
+1. **Test Order**: Tests should be executed in the order presented, as later tests depend on data created by earlier tests
+
+2. **Logging Verification**: After running all tests, check the application console logs to verify:
+   - All endpoints were called and logged
+   - HTTP status codes match expected values
+   - No unexpected errors occurred
+
+3. **Persistence Verification**: The WRITE/READ test pairs (e.g., Tests 2.1/2.4, 3.1/3.4, 4.1/4.7) verify that:
+   - Data written via POST requests is persisted
+   - Data can be retrieved via GET requests
+   - The retrieved data matches what was written
+
+4. **Multi-Client Verification**: Tests 6.1-6.6 verify that:
+   - Multiple clients can use the service simultaneously
+   - Each client's data is isolated (one client can't access another's data)
+   - Operations on one client's data don't affect another client's data
+
+5. **Coverage Summary**:
+   - Total endpoints: 20
+   - Total tests: 75+ (average 3-4 per endpoint)
+   - Typical valid inputs: 20+ tests
+   - Atypical valid inputs: 20+ tests
+   - Invalid inputs: 20+ tests
+   - Write operations: 15+ tests
+   - Read operations: 30+ tests
+   - Multi-client tests: 6 tests
+
+### Expected Results
+
+All tests should complete with their expected HTTP status codes and response bodies. The console logs should show all API calls being logged with appropriate status codes. The multi-client tests should demonstrate complete data isolation between different stores/clients.
+
 ## AI Tools Usage
 
 Our team utilized AI-assisted development tools to enhance productivity and code quality throughout the project development process.
