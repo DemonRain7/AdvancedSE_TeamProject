@@ -1,5 +1,9 @@
 package org.nullpointers.couponsystem.model;
 
+/**
+ * A coupon that applies a discount to a specific item.
+ * The discount can be either a percentage or a fixed amount.
+ */
 public class ItemCoupon extends Coupon {
   private int targetItemId;
 

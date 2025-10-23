@@ -1,11 +1,23 @@
 package org.nullpointers.couponsystem.model;
 
+/**
+ * Abstract base class for all coupon types in the system.
+ * Provides common functionality for calculating discounts and checking applicability.
+ */
 public abstract class Coupon {
   private int id;
   private int storeId;
   private double discountValue;
   private boolean isPercentage;
 
+  /**
+   * Constructs a coupon with the specified parameters.
+   *
+   * @param id the unique identifier for this coupon
+   * @param storeId the store this coupon belongs to
+   * @param discountValue the discount value (percentage or fixed amount)
+   * @param isPercentage true if discount is a percentage, false if it's a fixed amount
+   */
   public Coupon(int id, int storeId, double discountValue, boolean isPercentage) {
     this.id = id;
     this.storeId = storeId;
@@ -13,6 +25,9 @@ public abstract class Coupon {
     this.isPercentage = isPercentage;
   }
 
+  /**
+   * Default constructor initializing all fields to default values.
+   */
   public Coupon() {
     this.id = 0;
     this.storeId = 0;
