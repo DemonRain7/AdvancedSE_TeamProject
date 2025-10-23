@@ -53,6 +53,11 @@ public class RouteController {
   @PostMapping("/store")
   public ResponseEntity<?> createStore(@RequestBody Store store) {
     try {
+      // Validate store name is not null or empty
+      if (store.getName() == null || store.getName().trim().isEmpty()) {
+        return new ResponseEntity<>("Store name cannot be empty.",
+            HttpStatus.BAD_REQUEST);
+      }
       Store created = dataService.addStore(store);
       return new ResponseEntity<>(created, HttpStatus.CREATED);
     } catch (Exception e) {
@@ -112,6 +117,16 @@ public class RouteController {
   @PostMapping("/item")
   public ResponseEntity<?> createItem(@RequestBody Item item) {
     try {
+      // Validate item name is not null or empty
+      if (item.getName() == null || item.getName().trim().isEmpty()) {
+        return new ResponseEntity<>("Item name cannot be empty.",
+            HttpStatus.BAD_REQUEST);
+      }
+      // Validate item price is not negative
+      if (item.getPrice() < 0) {
+        return new ResponseEntity<>("Item price cannot be negative.",
+            HttpStatus.BAD_REQUEST);
+      }
       // Validate that the store exists
       if (dataService.getStore(item.getStoreId()) == null) {
         return new ResponseEntity<>("Store does not exist.", HttpStatus.BAD_REQUEST);
@@ -213,19 +228,51 @@ public class RouteController {
       double discountValue = ((Number) requestBody.get("discountValue")).doubleValue();
       boolean isPercentage = (Boolean) requestBody.get("isPercentage");
 
+      // Validate discount value is not negative
+      if (discountValue < 0) {
+        return new ResponseEntity<>("Discount value cannot be negative.",
+            HttpStatus.BAD_REQUEST);
+      }
+
+      // Validate percentage discount is not > 100
+      if (isPercentage && discountValue > 100) {
+        return new ResponseEntity<>("Percentage discount cannot exceed 100%.",
+            HttpStatus.BAD_REQUEST);
+      }
+
+      // Validate store exists
+      if (dataService.getStore(storeId) == null) {
+        return new ResponseEntity<>("Store does not exist.", HttpStatus.BAD_REQUEST);
+      }
+
       Coupon coupon;
 
       switch (type.toLowerCase()) {
         case "totalprice":
           double minPurchase = ((Number) requestBody.get("minimumPurchase")).doubleValue();
+          // Validate minimum purchase is not negative
+          if (minPurchase < 0) {
+            return new ResponseEntity<>("Minimum purchase cannot be negative.",
+                HttpStatus.BAD_REQUEST);
+          }
           coupon = new TotalPriceCoupon(0, storeId, discountValue, isPercentage, minPurchase);
           break;
         case "category":
           String category = (String) requestBody.get("category");
+          // Validate category is not null or empty
+          if (category == null || category.trim().isEmpty()) {
+            return new ResponseEntity<>("Category cannot be empty.",
+                HttpStatus.BAD_REQUEST);
+          }
           coupon = new CategoryCoupon(0, storeId, discountValue, isPercentage, category);
           break;
         case "item":
           int targetItemId = ((Number) requestBody.get("targetItemId")).intValue();
+          // Validate target item exists
+          if (dataService.getItem(targetItemId) == null) {
+            return new ResponseEntity<>("Target item does not exist.",
+                HttpStatus.BAD_REQUEST);
+          }
           coupon = new ItemCoupon(0, storeId, discountValue, isPercentage, targetItemId);
           break;
         default:
@@ -306,7 +353,21 @@ public class RouteController {
       ArrayList<Integer> itemIdsList = (ArrayList<Integer>) requestBody.get("itemIds");
       int storeId = ((Number) requestBody.get("storeId")).intValue();
 
+      // Validate cart is not empty
+      if (itemIdsList == null || itemIdsList.isEmpty()) {
+        return new ResponseEntity<>("Cart cannot be empty.",
+            HttpStatus.BAD_REQUEST);
+      }
+
       int[] itemIds = itemIdsList.stream().mapToInt(Integer::intValue).toArray();
+
+      // Validate all items exist
+      for (int itemId : itemIds) {
+        if (dataService.getItem(itemId) == null) {
+          return new ResponseEntity<>("Item with ID " + itemId + " does not exist.",
+              HttpStatus.BAD_REQUEST);
+        }
+      }
 
       Coupon optimalCoupon = couponService.findOptimalCoupon(itemIds, storeId);
 
@@ -377,8 +438,24 @@ public class RouteController {
       int storeId = ((Number) requestBody.get("storeId")).intValue();
       int couponId = ((Number) requestBody.get("couponId")).intValue();
 
+      // Validate cart is not empty
+      if (itemIdsList == null || itemIdsList.isEmpty()) {
+        return new ResponseEntity<>("Cart cannot be empty.",
+            HttpStatus.BAD_REQUEST);
+      }
+
       int[] itemIds = itemIdsList.stream().mapToInt(Integer::intValue).toArray();
 
+      // Validate all items exist
+      for (int itemId : itemIds) {
+        if (dataService.getItem(itemId) == null) {
+          return new ResponseEntity<>("Item with ID " + itemId + " does not exist.",
+              HttpStatus.BAD_REQUEST);
+        }
+      }
+
+      // Note: Coupon validation is handled by service layer
+      // Non-existent coupons will result in empty suggestions (not an error)
       ArrayList<Item> suggestions =
           couponService.findItemsToMeetCouponThreshold(itemIds, storeId, couponId);
 
