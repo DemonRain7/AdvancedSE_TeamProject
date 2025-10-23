@@ -1,5 +1,9 @@
 package org.nullpointers.couponsystem.model;
 
+/**
+ * A coupon that applies a discount based on the total purchase amount.
+ * The discount is only applied if the cart total meets the minimum purchase requirement.
+ */
 public class TotalPriceCoupon extends Coupon {
   private double minimumPurchase;
 

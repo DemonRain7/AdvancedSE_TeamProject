@@ -1,5 +1,9 @@
 package org.nullpointers.couponsystem.model;
 
+/**
+ * Represents a store in the coupon management system.
+ * Each store has a unique identifier and can have multiple items and coupons.
+ */
 public class Store {
   private int id;
   private String name;
