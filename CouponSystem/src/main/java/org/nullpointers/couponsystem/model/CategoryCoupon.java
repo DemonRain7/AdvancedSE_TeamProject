@@ -1,5 +1,9 @@
 package org.nullpointers.couponsystem.model;
 
+/**
+ * A coupon that applies a discount to all items in a specific category.
+ * The discount can be either a percentage or a fixed amount.
+ */
 public class CategoryCoupon extends Coupon {
   private String category;
 

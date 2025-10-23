@@ -17,6 +17,9 @@ public class TotalPriceCouponTest {
   private TotalPriceCoupon fixedCoupon;
   private Item[] cartItems;
 
+  /**
+   * Sets up test fixtures before each test method.
+   */
   @BeforeEach
   public void setUp() {
     percentageCoupon = new TotalPriceCoupon(1, 1, 10.0, true, 50.0);

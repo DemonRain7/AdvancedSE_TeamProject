@@ -1,5 +1,9 @@
 package org.nullpointers.couponsystem.model;
 
+/**
+ * Represents an item in the coupon management system.
+ * Each item belongs to a store and has a category for coupon matching.
+ */
 public class Item {
   private int id;
   private String name;
@@ -7,6 +11,15 @@ public class Item {
   private int storeId;
   private String category;
 
+  /**
+   * Constructs an item with the specified parameters.
+   *
+   * @param id the unique identifier for this item
+   * @param name the name of the item
+   * @param price the price of the item
+   * @param storeId the store this item belongs to
+   * @param category the category of the item for coupon matching
+   */
   public Item(int id, String name, double price, int storeId, String category) {
     this.id = id;
     this.name = name;
@@ -15,6 +28,9 @@ public class Item {
     this.category = category;
   }
 
+  /**
+   * Default constructor initializing all fields to default values.
+   */
   public Item() {
     this.id = 0;
     this.name = "";
