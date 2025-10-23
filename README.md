@@ -79,6 +79,12 @@ All components are loosely coupled using dependency injection via Spring Boot.
 
 ### Using Maven Wrapper (Recommended)
 
+**Note**: If you encounter a "Permission denied" error on Unix/macOS, you may need to make the Maven wrapper executable first:
+```bash
+cd CouponSystem
+chmod +x mvnw
+```
+
 On Unix/macOS:
 ```bash
 cd CouponSystem
@@ -102,6 +108,8 @@ This will compile the code, run all tests, generate test coverage reports, and p
 
 ## Running the Application
 
+**Note**: If you get a "Permission denied" error, see the [Building the Project](#building-the-project) section for instructions on making `mvnw` executable.
+
 ### Using Maven
 
 ```bash
@@ -120,6 +128,8 @@ java -jar target/couponsystem-0.0.1-SNAPSHOT.jar
 The application will start on `http://localhost:8080`
 
 ## Running Tests
+
+**Note**: If you get a "Permission denied" error, see the [Building the Project](#building-the-project) section for instructions on making `mvnw` executable.
 
 ### Run All Tests
 
