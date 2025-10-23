@@ -147,12 +147,20 @@ cd CouponSystem
 
 Coverage reports will be generated in `target/site/jacoco/index.html`
 
+#### Most Recent Test Coverage Results
+
+![Test Coverage Results](images/test-coverage.png)
+
 ### Run Style Checks
 
 ```bash
 cd CouponSystem
 ./mvnw checkstyle:check
 ```
+
+#### Most Recent Checkstyle Results
+
+![Checkstyle Results](images/checkstyle.png)
 
 ### Run Static Analysis
 
