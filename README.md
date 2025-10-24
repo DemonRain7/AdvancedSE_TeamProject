@@ -1482,6 +1482,12 @@ The use of AI tools enhanced our learning experience by:
 - Helping identify potential bugs and edge cases
 - Accelerating development while maintaining code quality standards
 
+## Project Management
+
+Our team used **Trello** for project management and task tracking throughout the development process. The board was used to organize user stories, track progress, and coordinate team activities.
+
+**Trello Board**: [View our project board](https://trello.com/invite/b/68fae05c15af1fdd16840251/ATTIa2161df1c0c2781f669c084c13b8287b99B194EE/-)
+
 ## Contributing
 
 This is a course project for the Null Pointers team. All code follows standard Java conventions with comprehensive documentation and testing. AI assistance was used throughout the development process to enhance productivity and code quality.
