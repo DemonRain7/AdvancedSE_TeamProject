@@ -23,11 +23,9 @@ jobs:
 
     - name: Build and test with Maven (includes Checkstyle validation)
       run: mvn -B clean package -f CouponSystem/pom.xml
-      continue-on-error: true
 
     - name: Run PMD analysis
       run: mvn -B pmd:pmd pmd:cpd -f CouponSystem/pom.xml
-      continue-on-error: true
       working-directory: .
 
     - name: Upload coverage to Codecov (optional)
@@ -36,7 +34,6 @@ jobs:
         files: ./CouponSystem/target/site/jacoco/jacoco.xml
         flags: unittests
         name: codecov-umbrella
-      continue-on-error: true
 
     - name: Archive test results
       if: always()
@@ -58,7 +55,6 @@ jobs:
       with:
         name: checkstyle-results
         path: CouponSystem/target/checkstyle-result.xml
-      continue-on-error: true
 
     - name: Archive PMD results
       if: always()
@@ -66,4 +62,3 @@ jobs:
       with:
         name: pmd-report
         path: CouponSystem/target/pmd.xml
-      continue-on-error: true
