@@ -21,6 +21,10 @@ jobs:
         distribution: 'temurin'
         cache: maven
 
+    - name: Download dependencies
+      run: mvn -B dependency:resolve dependency:resolve-plugins -f CouponSystem/pom.xml
+      continue-on-error: true
+
     - name: Build and test with Maven (includes Checkstyle validation)
       run: mvn -B clean package -f CouponSystem/pom.xml
       continue-on-error: false
