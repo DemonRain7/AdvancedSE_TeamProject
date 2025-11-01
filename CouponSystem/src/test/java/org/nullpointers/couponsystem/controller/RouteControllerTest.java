@@ -233,6 +233,7 @@ public class RouteControllerTest {
     requestBody.put("isPercentage", true);
     requestBody.put("minimumPurchase", 50.0);
 
+    when(mockDataService.getStore(1)).thenReturn(testStore);
     when(mockDataService.addCoupon(any(Coupon.class))).thenReturn(testCoupon);
 
     ResponseEntity<?> response = controller.createCoupon(requestBody);
@@ -250,6 +251,7 @@ public class RouteControllerTest {
     requestBody.put("category", "books");
 
     Coupon categoryCoupon = new CategoryCoupon(1, 1, 5.0, false, "books");
+    when(mockDataService.getStore(1)).thenReturn(testStore);
     when(mockDataService.addCoupon(any(Coupon.class))).thenReturn(categoryCoupon);
 
     ResponseEntity<?> response = controller.createCoupon(requestBody);
@@ -266,6 +268,8 @@ public class RouteControllerTest {
     requestBody.put("isPercentage", true);
     requestBody.put("targetItemId", 1);
 
+    when(mockDataService.getStore(1)).thenReturn(testStore);
+    when(mockDataService.getItem(1)).thenReturn(testItem);
     when(mockDataService.addCoupon(any(Coupon.class))).thenReturn(testCoupon);
 
     ResponseEntity<?> response = controller.createCoupon(requestBody);
@@ -421,6 +425,7 @@ public class RouteControllerTest {
 
     ArrayList<Item> suggestions = new ArrayList<>();
     suggestions.add(testItem);
+    when(mockDataService.getItem(1)).thenReturn(testItem);
     when(mockCouponService.findItemsToMeetCouponThreshold(
         any(int[].class), anyInt(), anyInt())).thenReturn(suggestions);
 
@@ -438,6 +443,7 @@ public class RouteControllerTest {
     requestBody.put("storeId", 1);
     requestBody.put("couponId", 1);
 
+    when(mockDataService.getItem(1)).thenReturn(testItem);
     when(mockCouponService.findItemsToMeetCouponThreshold(
         any(int[].class), anyInt(), anyInt())).thenReturn(new ArrayList<>());
 
