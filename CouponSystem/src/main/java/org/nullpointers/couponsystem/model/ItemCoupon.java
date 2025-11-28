@@ -7,15 +7,17 @@ package org.nullpointers.couponsystem.model;
 public class ItemCoupon extends Coupon {
   private int targetItemId;
 
-  public ItemCoupon(int id, int storeId, double discountValue, 
+  public ItemCoupon(int id, int storeId, double discountValue,
                     boolean isPercentage, int targetItemId) {
     super(id, storeId, discountValue, isPercentage);
     this.targetItemId = targetItemId;
+    setType("item");
   }
 
   public ItemCoupon() {
     super();
     this.targetItemId = 0;
+    setType("item");
   }
 
   @Override

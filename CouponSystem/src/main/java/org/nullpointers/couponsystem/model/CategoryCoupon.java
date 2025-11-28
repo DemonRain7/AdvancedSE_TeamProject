@@ -7,15 +7,17 @@ package org.nullpointers.couponsystem.model;
 public class CategoryCoupon extends Coupon {
   private String category;
 
-  public CategoryCoupon(int id, int storeId, double discountValue, 
+  public CategoryCoupon(int id, int storeId, double discountValue,
                         boolean isPercentage, String category) {
     super(id, storeId, discountValue, isPercentage);
     this.category = category;
+    setType("category");
   }
 
   public CategoryCoupon() {
     super();
     this.category = "";
+    setType("category");
   }
 
   @Override
