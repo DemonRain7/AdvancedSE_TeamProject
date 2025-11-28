@@ -18,6 +18,13 @@ A centralized coupon management system built with Spring Boot that allows stores
   - [Item Endpoints](#item-endpoints)
   - [Coupon Endpoints](#coupon-endpoints)
   - [Core Functionality Endpoints](#core-functionality-endpoints)
+- [Client Application](#client-application)
+  - [What the Client Does](#what-the-client-does)
+  - [Building and Running the Client](#building-and-running-the-client)
+  - [Multi-Client Support](#multi-client-support)
+- [End-to-End Testing](#end-to-end-testing)
+  - [Automated End-to-End Tests](#automated-end-to-end-tests)
+  - [Manual Testing Checklist](#manual-testing-checklist)
 - [Error Codes](#error-codes)
 - [Usage Examples](#usage-examples)
 - [Project Structure](#project-structure)
@@ -464,6 +471,292 @@ All endpoints return JSON responses unless otherwise specified.
 - Coupon must belong to the specified store
 - Returns cheapest combination of items to reach threshold
 - If cart already meets threshold, returns empty list
+
+---
+
+## Client Application
+
+### What the Client Does
+
+The client code is located in the [Client](Client/) directory. It contains a demonstration client application called **FlowerShopClient**, which simulates a local flower shop using the Coupon Management System.
+
+**Client Type**: Local Store Web Shop (Flower Shop)
+
+**Purpose**: The client provides a **basic demonstration** of how to interact with the service API. For comprehensive testing including detailed coupon verification, multi-client scenarios, and concurrent operations, please refer to the [End-to-End Testing](#end-to-end-testing) section.
+
+The client demonstrates how a retail business can leverage the centralized coupon management service to:
+
+1. **Register their store** with the coupon management system
+2. **Manage inventory** by adding products (flowers, plants, accessories)
+3. **Create promotional campaigns** using different types of coupons:
+   - Total price discounts (e.g., "15% off orders $50+")
+   - Category-specific discounts (e.g., "$5 off all flowers")
+   - Item-specific promotions
+4. **Optimize customer experience** by:
+   - Finding the best coupon for any shopping cart
+   - Suggesting items to help customers reach coupon thresholds
+   - Comparing prices across stores for customer recommendations
+
+### Building and Running the Client
+
+#### Prerequisites
+- Java Development Kit (JDK) 17 or higher
+- Maven 3.6+
+- The Coupon Management Service must be running
+
+#### Building the Client
+
+Navigate to the Client directory and build:
+
+```bash
+cd Client
+mvn clean package
+```
+
+This will compile the code and create an executable JAR file.
+
+#### Running the Client
+
+**Step 1: Start the Service**
+
+In one terminal, start the Coupon Management Service:
+
+```bash
+cd CouponSystem
+./mvnw spring-boot:run
+```
+
+Wait until you see: `Started CouponSystemApplication in X seconds`
+
+**Step 2: Run the Client**
+
+In another terminal, run the client:
+
+```bash
+cd Client
+java -jar target/coupon-client-1.0.0-jar-with-dependencies.jar
+```
+
+The client will execute a complete demonstration workflow showing all major features of the system.
+
+#### Connecting to a Different Service URL
+
+By default, the client connects to `http://localhost:8080`. To connect to a service running elsewhere:
+
+```bash
+java -jar target/coupon-client-1.0.0-jar-with-dependencies.jar http://your-service-url:port
+```
+
+For detailed client documentation, see [Client/README.md](Client/README.md).
+
+### Multi-Client Support
+
+The service supports **multiple client instances running simultaneously** and keeps their data completely isolated. Here's how the system achieves this:
+
+#### Client Identification Mechanism
+
+1. **Unique Store Registration**: Each client registers as a separate store by calling `POST /store` with their business name (e.g., "Rose Garden Flower Shop", "Tech World Electronics").
+
+2. **Store ID Assignment**: The service assigns a unique integer ID to each registered store and returns it to the client.
+
+3. **Store ID in All Operations**: Clients include their store ID in all subsequent API calls:
+   - `POST /item` with `storeId` - adds items to specific store
+   - `POST /coupon` with `storeId` - creates coupons for specific store
+   - `POST /cart/optimal-coupon` with `storeId` - finds coupons for specific store
+   - `GET /items/store/{storeId}` - retrieves only that store's items
+   - `GET /coupons/store/{storeId}` - retrieves only that store's coupons
+
+4. **Data Isolation**: The service ensures that:
+   - Each store can only access and modify their own items and coupons
+   - Cart operations only consider coupons from the specified store
+   - One store cannot interfere with another store's data
+
+#### Running Multiple Client Instances
+
+To run multiple clients simultaneously:
+
+**Terminal 1 - Service:**
+```bash
+cd CouponSystem
+./mvnw spring-boot:run
+```
+
+**Terminal 2 - First Client (Flower Shop):**
+```bash
+cd Client
+java -jar target/coupon-client-1.0.0-jar-with-dependencies.jar
+```
+
+**Terminal 3 - Second Client (modify to use different store name):**
+```bash
+cd Client
+# Modify FlowerShopClient.java to use a different store name, rebuild, and run
+java -jar target/coupon-client-1.0.0-jar-with-dependencies.jar
+```
+
+Each client instance will receive a unique store ID and operate independently without affecting other clients. You could verify by repetitively running this, each time with a different id (make sure ids that are already running!):
+```bash
+curl http://localhost:8080/items/store/{your store id}
+```
+
+#### How the Service Tells Clients Apart
+
+The service uses **store IDs as the primary mechanism** to distinguish between clients:
+
+- **No Session Tracking**: The service is stateless; it doesn't track sessions or require authentication.
+- **Store ID in Every Request**: Clients must include their store ID in API calls that manipulate or retrieve store-specific data.
+- **Server-Side Validation**: The service validates that items, coupons, and cart operations reference valid store IDs.
+- **Isolated Data Stores**: Each store's data is logically separated in the in-memory data structures.
+
+**Example**: If Client A (Store ID: 1) creates items and coupons, Client B (Store ID: 2) cannot access or modify them. When Client B calls `GET /items/store/2`, they only see their own items, not Client A's items.
+
+This design allows multiple independent businesses to safely share the same centralized coupon management infrastructure.
+
+---
+
+## End-to-End Testing
+
+The project includes comprehensive end-to-end (E2E) tests that verify the complete workflow of the client-service interaction.
+
+**Note**: The automated E2E tests are the **primary and recommended method** for verifying all functionality, including detailed coupon operations, multi-client isolation, and concurrent access scenarios. The client application provides a basic demonstration, while these tests provide complete verification.
+
+### Automated End-to-End Tests
+
+#### Location
+The automated E2E tests are located in:
+```
+CouponSystem/src/test/java/org/nullpointers/couponsystem/EndToEndTest.java
+```
+
+#### What the Tests Cover
+
+The `EndToEndTest` class contains five comprehensive test scenarios:
+
+1. **Complete Flower Shop Workflow** (`testFlowerShopCompleteWorkflow`)
+   - Registers a flower shop store
+   - Adds multiple flower products
+   - Creates promotional coupons
+   - Finds optimal coupons for customer carts
+   - Retrieves store recommendations
+
+2. **Multi-Client Isolation** (`testMultiClientIsolation`)
+   - Creates two separate stores (Flower Shop and Electronics Store)
+   - Adds items and coupons to each store
+   - Verifies that each store can only see its own data
+   - Confirms data isolation between clients
+
+3. **Cart Optimization Workflow** (`testCartOptimizationWorkflow`)
+   - Tests item suggestions to meet coupon thresholds
+   - Verifies suggestions are from the correct store
+   - Tests behavior when cart already meets threshold
+
+4. **Cross-Client Isolation** (`testCrossClientIsolation`)
+   - Attempts to use items from one store with another store's coupons
+   - Verifies the service prevents cross-store operations
+
+5. **Concurrent Client Operations** (`testConcurrentClientOperations`)
+   - Simulates multiple clients making simultaneous requests
+   - Verifies data integrity under concurrent access
+
+#### Running the Automated Tests
+
+To run the E2E tests:
+
+```bash
+cd CouponSystem
+./mvnw test -Dtest=EndToEndTest
+```
+
+Or to run all tests including E2E:
+
+```bash
+cd CouponSystem
+./mvnw test
+```
+
+The tests will:
+- Start the Spring Boot application on a random port
+- Make actual HTTP requests to the running service
+- Verify responses and data integrity
+- Report PASS/FAIL for each scenario
+
+#### Test Approach
+
+The E2E tests use:
+- **Spring Boot Test Framework**: Starts the real application server
+- **Java HTTP Client**: Makes actual HTTP requests (simulating real clients)
+- **JUnit 5**: Test orchestration and assertions
+- **Jackson ObjectMapper**: JSON parsing and validation
+
+These are true integration tests that exercise the complete stack, from HTTP layer through controllers, services, and data storage.
+
+### Manual Testing Checklist
+
+For manual testing of client-service interaction, follow this checklist:
+
+#### Prerequisites
+- [ ] Service is running at `http://localhost:8080`
+- [ ] Verify service is accessible: `curl http://localhost:8080/` returns welcome message
+
+#### Test Scenario 1: Single Client Workflow
+- [ ] **Build client**: `cd Client && mvn clean package`
+- [ ] **Run client**: `java -jar target/coupon-client-1.0.0-jar-with-dependencies.jar`
+- [ ] **Verify output**: Client should display:
+  - ✓ Store registration successful with assigned store ID
+  - ✓ All 7 products added successfully
+  - ✓ All 3 coupons created successfully
+  - ✓ Inventory displayed correctly
+  - ✓ Optimal coupon found for cart
+  - ✓ Store recommendations returned
+  - ✓ Cart optimization suggestions provided
+- [ ] **Verify service logs**: Check service terminal for logged API calls
+
+#### Test Scenario 2: Multi-Client Isolation
+- [ ] **Terminal 1**: Start service
+- [ ] **Terminal 2**: Run FlowerShopClient (note the store ID assigned)
+- [ ] **Terminal 3**: Create and run a second client with different store name
+- [ ] **Verify isolation**:
+  - Each client receives different store ID
+  - Use curl to verify: `curl http://localhost:8080/items/store/1` (replace 1 with first store ID)
+  - Use curl to verify: `curl http://localhost:8080/items/store/2` (replace 2 with second store ID)
+  - Confirm each store sees only its own items
+
+#### Test Scenario 3: Manual API Testing via Client
+- [ ] Run the client once to populate data
+- [ ] Note the store ID from client output
+- [ ] Use curl to manually test client operations:
+  ```bash
+  # Get items for the store
+  curl http://localhost:8080/items/store/{storeId}
+
+  # Get coupons for the store
+  curl http://localhost:8080/coupons/store/{storeId}
+
+  # Find optimal coupon
+  curl -X POST http://localhost:8080/cart/optimal-coupon \
+    -H "Content-Type: application/json" \
+    -d '{"itemIds": [1, 2, 3], "storeId": {storeId}}'
+  ```
+- [ ] Verify all responses return correct data for the client's store
+
+#### Test Scenario 4: Error Handling
+- [ ] **Test connection failure**: Stop service, run client, verify error message
+- [ ] **Test invalid data**: Modify client to send invalid store ID, verify error handling
+- [ ] **Test service restart**: Run client, restart service, run client again, verify fresh data
+
+#### Expected Outcomes
+All tests should demonstrate:
+- ✓ Client can successfully connect to the service
+- ✓ Client can perform all CRUD operations through the API
+- ✓ Service correctly isolates data between multiple clients
+- ✓ Service handles concurrent requests without data corruption
+- ✓ Error conditions are handled gracefully with appropriate messages
+
+For any failures, check:
+- Service is running and accessible
+- Client is using correct service URL
+- No firewall blocking connections
+- Service logs for error details
 
 ---
 

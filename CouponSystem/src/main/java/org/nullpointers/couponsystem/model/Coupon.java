@@ -9,6 +9,7 @@ public abstract class Coupon {
   private int storeId;
   private double discountValue;
   private boolean isPercentage;
+  private String type;
 
   /**
    * Constructs a coupon with the specified parameters.
@@ -77,6 +78,14 @@ public abstract class Coupon {
 
   public void setPercentage(boolean percentage) {
     isPercentage = percentage;
+  }
+
+  public String getType() {
+    return type;
+  }
+
+  public void setType(String type) {
+    this.type = type;
   }
 
   @Override

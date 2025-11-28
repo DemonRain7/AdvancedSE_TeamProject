@@ -7,15 +7,17 @@ package org.nullpointers.couponsystem.model;
 public class TotalPriceCoupon extends Coupon {
   private double minimumPurchase;
 
-  public TotalPriceCoupon(int id, int storeId, double discountValue, 
+  public TotalPriceCoupon(int id, int storeId, double discountValue,
                           boolean isPercentage, double minimumPurchase) {
     super(id, storeId, discountValue, isPercentage);
     this.minimumPurchase = minimumPurchase;
+    setType("totalprice");
   }
 
   public TotalPriceCoupon() {
     super();
     this.minimumPurchase = 0.0;
+    setType("totalprice");
   }
 
   @Override
