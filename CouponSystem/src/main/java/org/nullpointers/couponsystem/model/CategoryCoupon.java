@@ -7,6 +7,15 @@ package org.nullpointers.couponsystem.model;
 public class CategoryCoupon extends Coupon {
   private String category;
 
+  /**
+   * Constructs a CategoryCoupon with specified parameters.
+   *
+   * @param id unique identifier for the coupon
+   * @param storeId the store this coupon belongs to
+   * @param discountValue the discount amount or percentage
+   * @param isPercentage true if discount is a percentage, false if fixed amount
+   * @param category the category this coupon applies to
+   */
   public CategoryCoupon(int id, int storeId, double discountValue,
                         boolean isPercentage, String category) {
     super(id, storeId, discountValue, isPercentage);
@@ -14,6 +23,10 @@ public class CategoryCoupon extends Coupon {
     setType("category");
   }
 
+  /**
+   * Default constructor for CategoryCoupon.
+   * Sets category to empty string.
+   */
   public CategoryCoupon() {
     super();
     this.category = "";

@@ -7,6 +7,15 @@ package org.nullpointers.couponsystem.model;
 public class ItemCoupon extends Coupon {
   private int targetItemId;
 
+  /**
+   * Constructs an ItemCoupon with specified parameters.
+   *
+   * @param id unique identifier for the coupon
+   * @param storeId the store this coupon belongs to
+   * @param discountValue the discount amount or percentage
+   * @param isPercentage true if discount is a percentage, false if fixed amount
+   * @param targetItemId the specific item ID this coupon applies to
+   */
   public ItemCoupon(int id, int storeId, double discountValue,
                     boolean isPercentage, int targetItemId) {
     super(id, storeId, discountValue, isPercentage);
@@ -14,6 +23,10 @@ public class ItemCoupon extends Coupon {
     setType("item");
   }
 
+  /**
+   * Default constructor for ItemCoupon.
+   * Sets target item ID to 0.
+   */
   public ItemCoupon() {
     super();
     this.targetItemId = 0;

@@ -7,6 +7,15 @@ package org.nullpointers.couponsystem.model;
 public class TotalPriceCoupon extends Coupon {
   private double minimumPurchase;
 
+  /**
+   * Constructs a TotalPriceCoupon with specified parameters.
+   *
+   * @param id unique identifier for the coupon
+   * @param storeId the store this coupon belongs to
+   * @param discountValue the discount amount or percentage
+   * @param isPercentage true if discount is a percentage, false if fixed amount
+   * @param minimumPurchase minimum cart total required to apply this coupon
+   */
   public TotalPriceCoupon(int id, int storeId, double discountValue,
                           boolean isPercentage, double minimumPurchase) {
     super(id, storeId, discountValue, isPercentage);
@@ -14,6 +23,10 @@ public class TotalPriceCoupon extends Coupon {
     setType("totalprice");
   }
 
+  /**
+   * Default constructor for TotalPriceCoupon.
+   * Sets minimum purchase to 0.0.
+   */
   public TotalPriceCoupon() {
     super();
     this.minimumPurchase = 0.0;

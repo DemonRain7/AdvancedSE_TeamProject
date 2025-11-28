@@ -223,7 +223,7 @@ public class RouteController {
   @PostMapping("/coupon")
   public ResponseEntity<?> createCoupon(@RequestBody Map<String, Object> requestBody) {
     try {
-      String type = (String) requestBody.get("type");
+      final String type = (String) requestBody.get("type");
       int storeId = ((Number) requestBody.get("storeId")).intValue();
       double discountValue = ((Number) requestBody.get("discountValue")).doubleValue();
       boolean isPercentage = (Boolean) requestBody.get("isPercentage");
