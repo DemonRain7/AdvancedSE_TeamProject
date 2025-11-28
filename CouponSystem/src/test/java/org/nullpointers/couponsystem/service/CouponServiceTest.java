@@ -95,6 +95,13 @@ public class CouponServiceTest {
   }
 
   @Test
+  public void findOptimalCouponWithNullItemIdsTest() {
+    Coupon optimal = couponService.findOptimalCoupon(null, 1);
+
+    assertNull(optimal);
+  }
+
+  @Test
   public void findOptimalStoresForSearchByKeywordTest() {
     when(mockDataService.searchItemsByKeyword("Book")).thenReturn(
         new ArrayList<>(testItems.subList(0, 3)));
@@ -130,10 +137,25 @@ public class CouponServiceTest {
   public void findOptimalStoresWithNoMatchingItemsTest() {
     when(mockDataService.searchItemsByKeyword("NonExistent")).thenReturn(new ArrayList<>());
 
-    ArrayList<CouponService.StoreRecommendation> recommendations = 
+    ArrayList<CouponService.StoreRecommendation> recommendations =
         couponService.findOptimalStoresForSearch("NonExistent", null);
 
     assertTrue(recommendations.isEmpty());
+  }
+
+  @Test
+  public void findOptimalStoresForSearchWithNullCategoryTest() {
+    when(mockDataService.searchItemsByKeyword("Book")).thenReturn(
+        new ArrayList<>(testItems.subList(0, 2)));
+    when(mockDataService.getAllStores()).thenReturn(testStores);
+    when(mockDataService.getItem(1)).thenReturn(testItems.get(0));
+    when(mockDataService.getCouponsByStore(1)).thenReturn(testCoupons);
+
+    ArrayList<CouponService.StoreRecommendation> recommendations =
+        couponService.findOptimalStoresForSearch("Book", null);
+
+    assertNotNull(recommendations);
+    assertTrue(recommendations.size() > 0);
   }
 
   @Test
@@ -185,10 +207,28 @@ public class CouponServiceTest {
     when(mockDataService.getCoupon(1)).thenReturn(coupon);
     when(mockDataService.getItem(1)).thenReturn(testItems.get(0));
 
-    ArrayList<Item> suggestions = 
+    ArrayList<Item> suggestions =
         couponService.findItemsToMeetCouponThreshold(new int[]{1}, 1, 1);
 
     assertTrue(suggestions.isEmpty());
+  }
+
+  @Test
+  public void findItemsToMeetCouponThresholdWithMixedStoreItemsTest() {
+    TotalPriceCoupon coupon = new TotalPriceCoupon(1, 1, 10.0, true, 50.0);
+    when(mockDataService.getCoupon(1)).thenReturn(coupon);
+    when(mockDataService.getItem(1)).thenReturn(testItems.get(0));
+    when(mockDataService.getItem(4)).thenReturn(testItems.get(3));
+
+    ArrayList<Item> storeItems = new ArrayList<>();
+    storeItems.add(new Item(5, "Cheap1", 10.0, 1, "misc"));
+    when(mockDataService.getItemsByStore(1)).thenReturn(storeItems);
+
+    ArrayList<Item> suggestions =
+        couponService.findItemsToMeetCouponThreshold(new int[]{1, 4}, 1, 1);
+
+    assertNotNull(suggestions);
+    assertTrue(suggestions.size() > 0);
   }
 
   @Test

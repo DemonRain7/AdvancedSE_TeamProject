@@ -71,6 +71,16 @@ public class RouteControllerTest {
   }
 
   @Test
+  public void createStoreWithNullNameTest() {
+    Store storeWithNullName = new Store(0, null);
+
+    ResponseEntity<?> response = controller.createStore(storeWithNullName);
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    assertTrue(response.getBody().toString().contains("Store name cannot be empty"));
+  }
+
+  @Test
   public void getStoreWhenExistsTest() {
     when(mockDataService.getStore(1)).thenReturn(testStore);
 
@@ -139,6 +149,28 @@ public class RouteControllerTest {
     ResponseEntity<?> response = controller.createItem(invalidItem);
 
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+  }
+
+  @Test
+  public void createItemWithNullNameTest() {
+    when(mockDataService.getStore(1)).thenReturn(testStore);
+    Item itemWithNullName = new Item(0, null, 10.0, 1, "cat");
+
+    ResponseEntity<?> response = controller.createItem(itemWithNullName);
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    assertTrue(response.getBody().toString().contains("Item name cannot be empty"));
+  }
+
+  @Test
+  public void createItemWithNegativePriceTest() {
+    when(mockDataService.getStore(1)).thenReturn(testStore);
+    Item itemWithNegativePrice = new Item(0, "Test Item", -10.0, 1, "cat");
+
+    ResponseEntity<?> response = controller.createItem(itemWithNegativePrice);
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    assertTrue(response.getBody().toString().contains("Item price cannot be negative"));
   }
 
   @Test
@@ -288,6 +320,92 @@ public class RouteControllerTest {
     ResponseEntity<?> response = controller.createCoupon(requestBody);
 
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+  }
+
+  @Test
+  public void createCouponWithNegativeDiscountTest() {
+    Map<String, Object> requestBody = new HashMap<>();
+    requestBody.put("type", "totalprice");
+    requestBody.put("storeId", 1);
+    requestBody.put("discountValue", -5.0);
+    requestBody.put("isPercentage", true);
+    requestBody.put("minimumPurchase", 50.0);
+
+    when(mockDataService.getStore(1)).thenReturn(testStore);
+
+    ResponseEntity<?> response = controller.createCoupon(requestBody);
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    assertTrue(response.getBody().toString().contains("Discount value cannot be negative"));
+  }
+
+  @Test
+  public void createCouponWithPercentageOver100Test() {
+    Map<String, Object> requestBody = new HashMap<>();
+    requestBody.put("type", "totalprice");
+    requestBody.put("storeId", 1);
+    requestBody.put("discountValue", 150.0);
+    requestBody.put("isPercentage", true);
+    requestBody.put("minimumPurchase", 50.0);
+
+    when(mockDataService.getStore(1)).thenReturn(testStore);
+
+    ResponseEntity<?> response = controller.createCoupon(requestBody);
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    assertTrue(response.getBody().toString().contains("Percentage discount cannot exceed 100"));
+  }
+
+  @Test
+  public void createCouponWithNegativeMinimumPurchaseTest() {
+    Map<String, Object> requestBody = new HashMap<>();
+    requestBody.put("type", "totalprice");
+    requestBody.put("storeId", 1);
+    requestBody.put("discountValue", 10.0);
+    requestBody.put("isPercentage", true);
+    requestBody.put("minimumPurchase", -50.0);
+
+    when(mockDataService.getStore(1)).thenReturn(testStore);
+
+    ResponseEntity<?> response = controller.createCoupon(requestBody);
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    assertTrue(response.getBody().toString().contains("Minimum purchase cannot be negative"));
+  }
+
+  @Test
+  public void createCategoryCouponWithNullCategoryTest() {
+    Map<String, Object> requestBody = new HashMap<>();
+    requestBody.put("type", "category");
+    requestBody.put("storeId", 1);
+    requestBody.put("discountValue", 5.0);
+    requestBody.put("isPercentage", false);
+    requestBody.put("category", null);
+
+    when(mockDataService.getStore(1)).thenReturn(testStore);
+
+    ResponseEntity<?> response = controller.createCoupon(requestBody);
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    assertTrue(response.getBody().toString().contains("Category cannot be empty"));
+  }
+
+  @Test
+  public void createItemCouponWithNonExistentItemTest() {
+    Map<String, Object> requestBody = new HashMap<>();
+    requestBody.put("type", "item");
+    requestBody.put("storeId", 1);
+    requestBody.put("discountValue", 15.0);
+    requestBody.put("isPercentage", true);
+    requestBody.put("targetItemId", 99999);
+
+    when(mockDataService.getStore(1)).thenReturn(testStore);
+    when(mockDataService.getItem(99999)).thenReturn(null);
+
+    ResponseEntity<?> response = controller.createCoupon(requestBody);
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    assertTrue(response.getBody().toString().contains("Target item does not exist"));
   }
 
   @Test
