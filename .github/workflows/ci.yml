@@ -75,3 +75,54 @@ jobs:
         name: pmd-report
         path: CouponSystem/target/pmd.xml
       continue-on-error: true
+
+  api-tests:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Build application
+      run: mvn -B clean package -DskipTests -f CouponSystem/pom.xml
+
+    - name: Start Spring Boot application
+      run: |
+        cd CouponSystem
+        nohup mvn spring-boot:run > app.log 2>&1 &
+        echo $! > app.pid
+
+    - name: Wait for application to be ready
+      run: |
+        echo "Waiting for application to start..."
+        for i in {1..30}; do
+          if curl -s http://localhost:8080/ > /dev/null; then
+            echo "Application is ready!"
+            exit 0
+          fi
+          echo "Attempt $i: Application not ready yet, waiting..."
+          sleep 2
+        done
+        echo "Application failed to start"
+        cat CouponSystem/app.log
+        exit 1
+
+    - name: Run API tests
+      run: |
+        chmod +x test-api.sh
+        ./test-api.sh
+
+    - name: Stop application
+      if: always()
+      run: |
+        if [ -f CouponSystem/app.pid ]; then
+          kill $(cat CouponSystem/app.pid) || true
+        fi
