@@ -7,13 +7,13 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.nullpointers.couponsystem.model.CategoryCoupon;
 import org.nullpointers.couponsystem.model.Coupon;
 import org.nullpointers.couponsystem.model.Item;
 import org.nullpointers.couponsystem.model.Store;
 import org.nullpointers.couponsystem.model.TotalPriceCoupon;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 /**
@@ -21,12 +21,8 @@ import org.springframework.boot.test.context.SpringBootTest;
  */
 @SpringBootTest
 public class DataServiceTest {
+  @Autowired
   private DataService dataService;
-
-  @BeforeEach
-  public void setUp() {
-    dataService = new DataService();
-  }
 
   @Test
   public void addItemTest() {
