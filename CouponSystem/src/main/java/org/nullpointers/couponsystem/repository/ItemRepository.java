@@ -35,4 +35,3 @@ public interface ItemRepository extends JpaRepository<Item, Integer> {
    */
   List<Item> findByNameContainingIgnoreCase(String keyword);
 }
-
