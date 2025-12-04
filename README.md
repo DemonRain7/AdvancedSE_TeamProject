@@ -75,6 +75,8 @@ All components are loosely coupled using dependency injection via Spring Boot.
 - **Style Checker**: CheckStyle (Google Style)
 - **Static Analysis**: PMD
 - **Version Control**: Git/GitHub
+- **DataBase**: PostgreSQL
+
 
 ## Prerequisites
 

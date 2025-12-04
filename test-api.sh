@@ -173,11 +173,11 @@ echo "$RESPONSE" | head -1 | jq '.'
 check_status "$RESPONSE" "200"
 print_result $?
 
-print_test "2.7 - GET /store/{id} with ID=1"
+print_test "2.7 - GET /store/{id} with existing ID"
 echo "Input Type: TYPICAL VALID - Boundary test"
-echo "Partition: Valid ID=1 (AT minimum valid boundary)"
-RESPONSE=$(curl -s -w "\n%{http_code}" "$BASE_URL/store/1")
-echo "$RESPONSE" | head -1 | jq '.'
+echo "Partition: Valid existing ID (ID=$STORE1_ID)"
+RESPONSE=$(curl -s -w "\n%{http_code}" "$BASE_URL/store/$STORE1_ID")
+echo "$RESPONSE" | head -1 | jq '.' 2>/dev/null || echo "$RESPONSE" | head -1
 check_status "$RESPONSE" "200"
 print_result $?
 
@@ -953,6 +953,45 @@ echo -e "${RED}Failed: $FAIL_COUNT${NC}"
 TOTAL=$((PASS_COUNT + FAIL_COUNT))
 echo "Total: $TOTAL"
 echo ""
+
+# ==================== DATABASE CLEANUP ====================
+echo -e "${YELLOW}=========================================="
+echo "CLEANING UP DATABASE"
+echo -e "==========================================${NC}"
+echo ""
+
+# Check if psql is available
+if ! command -v psql &> /dev/null; then
+    echo -e "${RED}psql not found. Database cleanup will be skipped.${NC}"
+    echo ""
+    echo "To install PostgreSQL client (psql):"
+    echo "  Ubuntu/Debian: sudo apt install postgresql-client"
+    echo "  Fedora/RHEL:   sudo dnf install postgresql"
+    echo "  macOS:         brew install postgresql"
+    echo ""
+    echo "After installing, you can manually clean the database by running:"
+    echo "  ./cleanup_db.sh"
+    echo ""
+else
+    # Database connection details from application.properties
+    DB_HOST="advancedse-db1.cro62egwmoki.us-east-2.rds.amazonaws.com"
+    DB_PORT="5432"
+    DB_NAME="coupon_db"
+    DB_USER="postgres"
+    export PGPASSWORD="AdvancedSE_TeamProject"
+
+    echo "Removing all test data from database..."
+
+    # Truncate tables and reset identity columns
+    psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -c "TRUNCATE TABLE stores, items, coupons RESTART IDENTITY CASCADE;" > /dev/null 2>&1
+
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}Database cleanup successful. All data removed and IDs reset.${NC}"
+    else
+        echo -e "${RED}Warning: Database cleanup failed. You may need to clean up manually.${NC}"
+    fi
+    echo ""
+fi
 
 if [ $FAIL_COUNT -eq 0 ]; then
     echo -e "${GREEN}All tests passed! ✓${NC}"
