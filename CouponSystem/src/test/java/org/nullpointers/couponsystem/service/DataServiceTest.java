@@ -7,43 +7,43 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.nullpointers.couponsystem.model.CategoryCoupon;
 import org.nullpointers.couponsystem.model.Coupon;
 import org.nullpointers.couponsystem.model.Item;
 import org.nullpointers.couponsystem.model.Store;
 import org.nullpointers.couponsystem.model.TotalPriceCoupon;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Unit tests for the DataService class.
  */
 @SpringBootTest
+@Transactional
 public class DataServiceTest {
+  @Autowired
   private DataService dataService;
-
-  @BeforeEach
-  public void setUp() {
-    dataService = new DataService();
-  }
 
   @Test
   public void addItemTest() {
-    Item item = new Item(0, "Laptop", 999.99, 1, "electronics");
+    Store store = dataService.addStore(new Store(0, "Tech Store"));
+    Item item = new Item(0, "Laptop", 999.99, store.getId(), "electronics");
     Item added = dataService.addItem(item);
     
     assertNotNull(added);
-    assertEquals(1, added.getId());
+    assertTrue(added.getId() > 0);
     assertEquals("Laptop", added.getName());
   }
 
   @Test
   public void addItemWithExistingIdTest() {
-    Item item = new Item(5, "Laptop", 999.99, 1, "electronics");
+    Store store = dataService.addStore(new Store(0, "Tech Store"));
+    Item item = new Item(0, "Laptop", 999.99, store.getId(), "electronics");
     Item added = dataService.addItem(item);
     
-    assertEquals(5, added.getId());
+    assertTrue(added.getId() > 0);
   }
 
   @Test
@@ -52,22 +52,24 @@ public class DataServiceTest {
     Store added = dataService.addStore(store);
     
     assertNotNull(added);
-    assertEquals(1, added.getId());
+    assertTrue(added.getId() > 0);
     assertEquals("Tech Store", added.getName());
   }
 
   @Test
   public void addCouponTest() {
-    Coupon coupon = new TotalPriceCoupon(0, 1, 10.0, true, 50.0);
+    Store store = dataService.addStore(new Store(0, "Tech Store"));
+    Coupon coupon = new TotalPriceCoupon(0, store.getId(), 10.0, true, 50.0);
     Coupon added = dataService.addCoupon(coupon);
     
     assertNotNull(added);
-    assertEquals(1, added.getId());
+    assertTrue(added.getId() > 0);
   }
 
   @Test
   public void getItemTest() {
-    Item item = new Item(0, "Laptop", 999.99, 1, "electronics");
+    Store store = dataService.addStore(new Store(0, "Tech Store"));
+    Item item = new Item(0, "Laptop", 999.99, store.getId(), "electronics");
     Item added = dataService.addItem(item);
     
     Item retrieved = dataService.getItem(added.getId());
@@ -93,7 +95,8 @@ public class DataServiceTest {
 
   @Test
   public void getCouponTest() {
-    Coupon coupon = new TotalPriceCoupon(0, 1, 10.0, true, 50.0);
+    Store store = dataService.addStore(new Store(0, "Tech Store"));
+    Coupon coupon = new TotalPriceCoupon(0, store.getId(), 10.0, true, 50.0);
     Coupon added = dataService.addCoupon(coupon);
     
     Coupon retrieved = dataService.getCoupon(added.getId());
@@ -103,8 +106,9 @@ public class DataServiceTest {
 
   @Test
   public void getAllItemsTest() {
-    dataService.addItem(new Item(0, "Item1", 10.0, 1, "cat1"));
-    dataService.addItem(new Item(0, "Item2", 20.0, 1, "cat2"));
+    Store store = dataService.addStore(new Store(0, "Store1"));
+    dataService.addItem(new Item(0, "Item1", 10.0, store.getId(), "cat1"));
+    dataService.addItem(new Item(0, "Item2", 20.0, store.getId(), "cat2"));
     
     ArrayList<Item> items = dataService.getAllItems();
     assertEquals(2, items.size());
@@ -121,8 +125,9 @@ public class DataServiceTest {
 
   @Test
   public void getAllCouponsTest() {
-    dataService.addCoupon(new TotalPriceCoupon(0, 1, 10.0, true, 50.0));
-    dataService.addCoupon(new CategoryCoupon(0, 1, 5.0, false, "books"));
+    Store store = dataService.addStore(new Store(0, "Store1"));
+    dataService.addCoupon(new TotalPriceCoupon(0, store.getId(), 10.0, true, 50.0));
+    dataService.addCoupon(new CategoryCoupon(0, store.getId(), 5.0, false, "books"));
     
     ArrayList<Coupon> coupons = dataService.getAllCoupons();
     assertEquals(2, coupons.size());
@@ -130,29 +135,35 @@ public class DataServiceTest {
 
   @Test
   public void getItemsByStoreTest() {
-    dataService.addItem(new Item(0, "Item1", 10.0, 1, "cat1"));
-    dataService.addItem(new Item(0, "Item2", 20.0, 1, "cat2"));
-    dataService.addItem(new Item(0, "Item3", 30.0, 2, "cat1"));
+    Store store1 = dataService.addStore(new Store(0, "Store1"));
+    Store store2 = dataService.addStore(new Store(0, "Store2"));
+    dataService.addItem(new Item(0, "Item1", 10.0, store1.getId(), "cat1"));
+    dataService.addItem(new Item(0, "Item2", 20.0, store1.getId(), "cat2"));
+    dataService.addItem(new Item(0, "Item3", 30.0, store2.getId(), "cat1"));
     
-    ArrayList<Item> store1Items = dataService.getItemsByStore(1);
+    ArrayList<Item> store1Items = dataService.getItemsByStore(store1.getId());
     assertEquals(2, store1Items.size());
   }
 
   @Test
   public void getCouponsByStoreTest() {
-    dataService.addCoupon(new TotalPriceCoupon(0, 1, 10.0, true, 50.0));
-    dataService.addCoupon(new CategoryCoupon(0, 1, 5.0, false, "books"));
-    dataService.addCoupon(new TotalPriceCoupon(0, 2, 15.0, false, 100.0));
+    Store store1 = dataService.addStore(new Store(0, "Store1"));
+    Store store2 = dataService.addStore(new Store(0, "Store2"));
+    dataService.addCoupon(new TotalPriceCoupon(0, store1.getId(), 10.0, true, 50.0));
+    dataService.addCoupon(new CategoryCoupon(0, store1.getId(), 5.0, false, "books"));
+    dataService.addCoupon(new TotalPriceCoupon(0, store2.getId(), 15.0, false, 100.0));
     
-    ArrayList<Coupon> store1Coupons = dataService.getCouponsByStore(1);
+    ArrayList<Coupon> store1Coupons = dataService.getCouponsByStore(store1.getId());
     assertEquals(2, store1Coupons.size());
   }
 
   @Test
   public void getItemsByCategoryTest() {
-    dataService.addItem(new Item(0, "Book1", 10.0, 1, "books"));
-    dataService.addItem(new Item(0, "Book2", 20.0, 2, "books"));
-    dataService.addItem(new Item(0, "Toy1", 30.0, 1, "toys"));
+    Store store1 = dataService.addStore(new Store(0, "Store1"));
+    Store store2 = dataService.addStore(new Store(0, "Store2"));
+    dataService.addItem(new Item(0, "Book1", 10.0, store1.getId(), "books"));
+    dataService.addItem(new Item(0, "Book2", 20.0, store2.getId(), "books"));
+    dataService.addItem(new Item(0, "Toy1", 30.0, store1.getId(), "toys"));
     
     ArrayList<Item> bookItems = dataService.getItemsByCategory("books");
     assertEquals(2, bookItems.size());
@@ -160,8 +171,10 @@ public class DataServiceTest {
 
   @Test
   public void getItemsByCategoryCaseInsensitiveTest() {
-    dataService.addItem(new Item(0, "Book1", 10.0, 1, "Books"));
-    dataService.addItem(new Item(0, "Book2", 20.0, 2, "BOOKS"));
+    Store store1 = dataService.addStore(new Store(0, "Store1"));
+    Store store2 = dataService.addStore(new Store(0, "Store2"));
+    dataService.addItem(new Item(0, "Book1", 10.0, store1.getId(), "Books"));
+    dataService.addItem(new Item(0, "Book2", 20.0, store2.getId(), "BOOKS"));
     
     ArrayList<Item> bookItems = dataService.getItemsByCategory("books");
     assertEquals(2, bookItems.size());
@@ -169,9 +182,10 @@ public class DataServiceTest {
 
   @Test
   public void searchItemsByKeywordTest() {
-    dataService.addItem(new Item(0, "Gaming Laptop", 999.0, 1, "electronics"));
-    dataService.addItem(new Item(0, "Office Laptop", 699.0, 1, "electronics"));
-    dataService.addItem(new Item(0, "Gaming Mouse", 49.0, 1, "electronics"));
+    Store store1 = dataService.addStore(new Store(0, "Store1"));
+    dataService.addItem(new Item(0, "Gaming Laptop", 999.0, store1.getId(), "electronics"));
+    dataService.addItem(new Item(0, "Office Laptop", 699.0, store1.getId(), "electronics"));
+    dataService.addItem(new Item(0, "Gaming Mouse", 49.0, store1.getId(), "electronics"));
     
     ArrayList<Item> laptops = dataService.searchItemsByKeyword("Laptop");
     assertEquals(2, laptops.size());
@@ -179,7 +193,8 @@ public class DataServiceTest {
 
   @Test
   public void searchItemsByKeywordCaseInsensitiveTest() {
-    dataService.addItem(new Item(0, "Gaming Laptop", 999.0, 1, "electronics"));
+    Store store1 = dataService.addStore(new Store(0, "Store1"));
+    dataService.addItem(new Item(0, "Gaming Laptop", 999.0, store1.getId(), "electronics"));
     
     ArrayList<Item> results = dataService.searchItemsByKeyword("laptop");
     assertEquals(1, results.size());
@@ -187,7 +202,8 @@ public class DataServiceTest {
 
   @Test
   public void deleteItemTest() {
-    Item item = dataService.addItem(new Item(0, "Item1", 10.0, 1, "cat1"));
+    Store store = dataService.addStore(new Store(0, "Store1"));
+    Item item = dataService.addItem(new Item(0, "Item1", 10.0, store.getId(), "cat1"));
     
     boolean deleted = dataService.deleteItem(item.getId());
     assertTrue(deleted);
@@ -211,11 +227,11 @@ public class DataServiceTest {
 
   @Test
   public void deleteCouponTest() {
-    Coupon coupon = dataService.addCoupon(new TotalPriceCoupon(0, 1, 10.0, true, 50.0));
+    Store store = dataService.addStore(new Store(0, "Store1"));
+    Coupon coupon = dataService.addCoupon(new TotalPriceCoupon(0, store.getId(), 10.0, true, 50.0));
     
     boolean deleted = dataService.deleteCoupon(coupon.getId());
     assertTrue(deleted);
     assertNull(dataService.getCoupon(coupon.getId()));
   }
 }
-

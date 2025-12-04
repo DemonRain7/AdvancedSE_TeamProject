@@ -1,36 +1,39 @@
 package org.nullpointers.couponsystem.service;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Optional;
 import org.nullpointers.couponsystem.model.Coupon;
 import org.nullpointers.couponsystem.model.Item;
 import org.nullpointers.couponsystem.model.Store;
+import org.nullpointers.couponsystem.repository.CouponRepository;
+import org.nullpointers.couponsystem.repository.ItemRepository;
+import org.nullpointers.couponsystem.repository.StoreRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
  * Service class responsible for managing all data in the coupon system.
- * Acts as an in-memory database for items, stores, and coupons.
+ * Acts as an interface to the database for items, stores, and coupons.
  */
 @Service
 public class DataService {
-  private final Map<Integer, Item> items;
-  private final Map<Integer, Store> stores;
-  private final Map<Integer, Coupon> coupons;
-  private int nextItemId;
-  private int nextStoreId;
-  private int nextCouponId;
+  private final StoreRepository storeRepository;
+  private final ItemRepository itemRepository;
+  private final CouponRepository couponRepository;
 
   /**
-   * Initializes the data service with empty collections.
+   * Initializes the data service with repositories.
+   *
+   * @param storeRepository the store repository
+   * @param itemRepository the item repository
+   * @param couponRepository the coupon repository
    */
-  public DataService() {
-    this.items = new HashMap<>();
-    this.stores = new HashMap<>();
-    this.coupons = new HashMap<>();
-    this.nextItemId = 1;
-    this.nextStoreId = 1;
-    this.nextCouponId = 1;
+  @Autowired
+  public DataService(StoreRepository storeRepository, ItemRepository itemRepository,
+                     CouponRepository couponRepository) {
+    this.storeRepository = storeRepository;
+    this.itemRepository = itemRepository;
+    this.couponRepository = couponRepository;
   }
 
   /**
@@ -40,11 +43,7 @@ public class DataService {
    * @return the added item with assigned ID
    */
   public Item addItem(Item item) {
-    if (item.getId() == 0) {
-      item.setId(nextItemId++);
-    }
-    items.put(item.getId(), item);
-    return item;
+    return itemRepository.save(item);
   }
 
   /**
@@ -54,11 +53,7 @@ public class DataService {
    * @return the added store with assigned ID
    */
   public Store addStore(Store store) {
-    if (store.getId() == 0) {
-      store.setId(nextStoreId++);
-    }
-    stores.put(store.getId(), store);
-    return store;
+    return storeRepository.save(store);
   }
 
   /**
@@ -68,35 +63,34 @@ public class DataService {
    * @return the added coupon with assigned ID
    */
   public Coupon addCoupon(Coupon coupon) {
-    if (coupon.getId() == 0) {
-      coupon.setId(nextCouponId++);
-    }
-    coupons.put(coupon.getId(), coupon);
-    return coupon;
+    return couponRepository.save(coupon);
   }
 
   public Item getItem(int id) {
-    return items.get(id);
+    Optional<Item> item = itemRepository.findById(id);
+    return item.orElse(null);
   }
 
   public Store getStore(int id) {
-    return stores.get(id);
+    Optional<Store> store = storeRepository.findById(id);
+    return store.orElse(null);
   }
 
   public Coupon getCoupon(int id) {
-    return coupons.get(id);
+    Optional<Coupon> coupon = couponRepository.findById(id);
+    return coupon.orElse(null);
   }
 
   public ArrayList<Item> getAllItems() {
-    return new ArrayList<>(items.values());
+    return new ArrayList<>(itemRepository.findAll());
   }
 
   public ArrayList<Store> getAllStores() {
-    return new ArrayList<>(stores.values());
+    return new ArrayList<>(storeRepository.findAll());
   }
 
   public ArrayList<Coupon> getAllCoupons() {
-    return new ArrayList<>(coupons.values());
+    return new ArrayList<>(couponRepository.findAll());
   }
 
   /**
@@ -106,13 +100,7 @@ public class DataService {
    * @return list of items from the specified store
    */
   public ArrayList<Item> getItemsByStore(int storeId) {
-    ArrayList<Item> result = new ArrayList<>();
-    for (Item item : items.values()) {
-      if (item.getStoreId() == storeId) {
-        result.add(item);
-      }
-    }
-    return result;
+    return new ArrayList<>(itemRepository.findByStoreId(storeId));
   }
 
   /**
@@ -122,13 +110,7 @@ public class DataService {
    * @return list of coupons from the specified store
    */
   public ArrayList<Coupon> getCouponsByStore(int storeId) {
-    ArrayList<Coupon> result = new ArrayList<>();
-    for (Coupon coupon : coupons.values()) {
-      if (coupon.getStoreId() == storeId) {
-        result.add(coupon);
-      }
-    }
-    return result;
+    return new ArrayList<>(couponRepository.findByStoreId(storeId));
   }
 
   /**
@@ -138,13 +120,7 @@ public class DataService {
    * @return list of items in the specified category
    */
   public ArrayList<Item> getItemsByCategory(String category) {
-    ArrayList<Item> result = new ArrayList<>();
-    for (Item item : items.values()) {
-      if (item.getCategory().equalsIgnoreCase(category)) {
-        result.add(item);
-      }
-    }
-    return result;
+    return new ArrayList<>(itemRepository.findByCategoryIgnoreCase(category));
   }
 
   /**
@@ -154,13 +130,7 @@ public class DataService {
    * @return list of items containing the keyword
    */
   public ArrayList<Item> searchItemsByKeyword(String keyword) {
-    ArrayList<Item> result = new ArrayList<>();
-    for (Item item : items.values()) {
-      if (item.getName().toLowerCase().contains(keyword.toLowerCase())) {
-        result.add(item);
-      }
-    }
-    return result;
+    return new ArrayList<>(itemRepository.findByNameContainingIgnoreCase(keyword));
   }
 
   /**
@@ -170,7 +140,11 @@ public class DataService {
    * @return true if deleted, false if not found
    */
   public boolean deleteItem(int id) {
-    return items.remove(id) != null;
+    if (itemRepository.existsById(id)) {
+      itemRepository.deleteById(id);
+      return true;
+    }
+    return false;
   }
 
   /**
@@ -180,7 +154,11 @@ public class DataService {
    * @return true if deleted, false if not found
    */
   public boolean deleteStore(int id) {
-    return stores.remove(id) != null;
+    if (storeRepository.existsById(id)) {
+      storeRepository.deleteById(id);
+      return true;
+    }
+    return false;
   }
 
   /**
@@ -190,6 +168,10 @@ public class DataService {
    * @return true if deleted, false if not found
    */
   public boolean deleteCoupon(int id) {
-    return coupons.remove(id) != null;
+    if (couponRepository.existsById(id)) {
+      couponRepository.deleteById(id);
+      return true;
+    }
+    return false;
   }
 }

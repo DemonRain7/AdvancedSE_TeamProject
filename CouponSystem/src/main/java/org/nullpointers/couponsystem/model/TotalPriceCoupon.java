@@ -1,9 +1,14 @@
 package org.nullpointers.couponsystem.model;
 
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+
 /**
  * A coupon that applies a discount based on the total purchase amount.
  * The discount is only applied if the cart total meets the minimum purchase requirement.
  */
+@Entity
+@DiscriminatorValue("TOTAL_PRICE")
 public class TotalPriceCoupon extends Coupon {
   private double minimumPurchase;
 

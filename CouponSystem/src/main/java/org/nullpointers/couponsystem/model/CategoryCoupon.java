@@ -1,9 +1,14 @@
 package org.nullpointers.couponsystem.model;
 
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+
 /**
  * A coupon that applies a discount to all items in a specific category.
  * The discount can be either a percentage or a fixed amount.
  */
+@Entity
+@DiscriminatorValue("CATEGORY")
 public class CategoryCoupon extends Coupon {
   private String category;
 
