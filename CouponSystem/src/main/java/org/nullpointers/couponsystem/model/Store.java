@@ -1,10 +1,20 @@
 package org.nullpointers.couponsystem.model;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
 /**
  * Represents a store in the coupon management system.
  * Each store has a unique identifier and can have multiple items and coupons.
  */
+@Entity
+@Table(name = "stores")
 public class Store {
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   private int id;
   private String name;
 

@@ -1,10 +1,25 @@
 package org.nullpointers.couponsystem.model;
 
+import jakarta.persistence.DiscriminatorColumn;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.Table;
+
 /**
  * Abstract base class for all coupon types in the system.
  * Provides common functionality for calculating discounts and checking applicability.
  */
+@Entity
+@Table(name = "coupons")
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "coupon_type")
 public abstract class Coupon {
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   private int id;
   private int storeId;
   private double discountValue;
