@@ -10,7 +10,9 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -37,6 +39,8 @@ class EndToEndTest {
 
   @LocalServerPort
   private int port;
+  
+  private static int staticPort;
 
   private static HttpClient httpClient;
   private static ObjectMapper objectMapper;
@@ -53,6 +57,11 @@ class EndToEndTest {
   static void setup() {
     httpClient = HttpClient.newHttpClient();
     objectMapper = new ObjectMapper();
+  }
+  
+  @BeforeEach
+  void setPort() {
+    staticPort = port;
   }
 
   /**
@@ -416,5 +425,77 @@ class EndToEndTest {
 
     JsonNode items = objectMapper.readTree(verifyResponse.body());
     assertEquals(3, items.size(), "Data should remain consistent after concurrent access");
+  }
+
+  /**
+   * Final cleanup to ensure all test data is removed after all tests complete.
+   * This prevents database contamination for future test runs.
+   */
+  @AfterAll
+  static void cleanupAll() {
+    try {
+      // Use the stored port from the last test execution
+      if (staticPort == 0) {
+        return; // Port not set, skip cleanup
+      }
+      
+      String baseUrl = "http://localhost:" + staticPort;
+      
+      // Cleanup electronics store data
+      for (int itemId : electronicItemIds) {
+        if (itemId > 0) {
+          HttpRequest deleteItemReq = HttpRequest.newBuilder()
+              .uri(URI.create(baseUrl + "/item/" + itemId))
+              .DELETE()
+              .build();
+          httpClient.send(deleteItemReq, HttpResponse.BodyHandlers.ofString());
+        }
+      }
+      
+      if (electronicsCouponId > 0) {
+        HttpRequest deleteCouponReq = HttpRequest.newBuilder()
+            .uri(URI.create(baseUrl + "/coupon/" + electronicsCouponId))
+            .DELETE()
+            .build();
+        httpClient.send(deleteCouponReq, HttpResponse.BodyHandlers.ofString());
+      }
+      
+      if (electronicsStoreId > 0) {
+        HttpRequest deleteStoreReq = HttpRequest.newBuilder()
+            .uri(URI.create(baseUrl + "/store/" + electronicsStoreId))
+            .DELETE()
+            .build();
+        httpClient.send(deleteStoreReq, HttpResponse.BodyHandlers.ofString());
+      }
+      
+      // Cleanup flower shop data
+      for (int itemId : flowerItemIds) {
+        if (itemId > 0) {
+          HttpRequest deleteItemReq = HttpRequest.newBuilder()
+              .uri(URI.create(baseUrl + "/item/" + itemId))
+              .DELETE()
+              .build();
+          httpClient.send(deleteItemReq, HttpResponse.BodyHandlers.ofString());
+        }
+      }
+      
+      if (flowerCouponId > 0) {
+        HttpRequest deleteCouponReq = HttpRequest.newBuilder()
+            .uri(URI.create(baseUrl + "/coupon/" + flowerCouponId))
+            .DELETE()
+            .build();
+        httpClient.send(deleteCouponReq, HttpResponse.BodyHandlers.ofString());
+      }
+      
+      if (flowerShopStoreId > 0) {
+        HttpRequest deleteStoreReq = HttpRequest.newBuilder()
+            .uri(URI.create(baseUrl + "/store/" + flowerShopStoreId))
+            .DELETE()
+            .build();
+        httpClient.send(deleteStoreReq, HttpResponse.BodyHandlers.ofString());
+      }
+    } catch (Exception e) {
+      // Ignore cleanup errors - tests have already completed
+    }
   }
 }

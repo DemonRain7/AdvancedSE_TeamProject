@@ -2,6 +2,8 @@ package org.nullpointers.couponsystem.model;
 
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
@@ -17,6 +19,7 @@ import jakarta.persistence.Table;
 @DiscriminatorColumn(name = "coupon_type")
 public abstract class Coupon {
   @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   private int id;
   private int storeId;
   private double discountValue;
