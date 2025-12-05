@@ -15,12 +15,14 @@ import org.nullpointers.couponsystem.model.Store;
 import org.nullpointers.couponsystem.model.TotalPriceCoupon;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Unit tests for the DataService class.
  */
 @SpringBootTest
+@ActiveProfiles("test")
 @Transactional
 public class DataServiceTest {
   @Autowired

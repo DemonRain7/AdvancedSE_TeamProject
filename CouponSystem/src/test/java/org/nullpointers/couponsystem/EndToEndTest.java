@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.test.context.ActiveProfiles;
 
 /**
  * End-to-End Integration Tests for the Coupon Management System.
@@ -34,6 +35,7 @@ import org.springframework.boot.test.web.server.LocalServerPort;
  * - Scenario 3: Cart optimization and coupon selection
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class EndToEndTest {
 

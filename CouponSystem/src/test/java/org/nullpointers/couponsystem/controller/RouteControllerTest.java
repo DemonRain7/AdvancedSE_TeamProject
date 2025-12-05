@@ -24,11 +24,13 @@ import org.nullpointers.couponsystem.service.DataService;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.ActiveProfiles;
 
 /**
  * Unit tests for the RouteController class using mocking.
  */
 @SpringBootTest
+@ActiveProfiles("test")
 public class RouteControllerTest {
   private RouteController controller;
   private DataService mockDataService;
