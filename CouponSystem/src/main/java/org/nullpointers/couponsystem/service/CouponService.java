@@ -76,6 +76,8 @@ public class CouponService {
 
     // Group items by store and find the cheapest item per store
     ArrayList<StoreRecommendation> recommendations = new ArrayList<>();
+    Item[] reusableCart = new Item[1];
+    int[] reusableIdList = new int[1];
     
     for (Store store : dataService.getAllStores()) {
       Item cheapestItem = null;
@@ -90,15 +92,16 @@ public class CouponService {
 
       if (cheapestItem != null) {
         // Calculate price with best applicable coupon
-        Item[] cart = new Item[]{cheapestItem};
-        Coupon bestCoupon = findOptimalCoupon(
-            new int[]{cheapestItem.getId()}, store.getId());
+        reusableCart[0] = cheapestItem;
+        reusableIdList[0] = cheapestItem.getId();
+        
+        Coupon bestCoupon = findOptimalCoupon(reusableIdList, store.getId());
         
         double finalPrice = lowestPrice;
         double discount = 0.0;
         
         if (bestCoupon != null) {
-          discount = bestCoupon.calculateDiscount(cart);
+          discount = bestCoupon.calculateDiscount(reusableCart);
           finalPrice = lowestPrice - discount;
         }
 
