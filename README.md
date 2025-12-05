@@ -129,7 +129,7 @@ cd CouponSystem
 ```bash
 cd CouponSystem
 ./mvnw clean package
-java -jar target/couponsystem-0.0.1-SNAPSHOT.jar
+java -jar target/couponsystem-1.0.0.jar
 ```
 
 The application will start on `http://localhost:8080`
