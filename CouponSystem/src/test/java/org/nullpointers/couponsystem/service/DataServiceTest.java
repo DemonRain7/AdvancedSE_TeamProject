@@ -70,10 +70,11 @@ public class DataServiceTest {
 
   @Test
   public void getItemTest() {
+    // Partition: Valid existing ID (typical valid)
     Store store = dataService.addStore(new Store(0, "Tech Store"));
     Item item = new Item(0, "Laptop", 999.99, store.getId(), "electronics");
     Item added = dataService.addItem(item);
-    
+
     Item retrieved = dataService.getItem(added.getId());
     assertNotNull(retrieved);
     assertEquals(added.getId(), retrieved.getId());
@@ -81,29 +82,88 @@ public class DataServiceTest {
 
   @Test
   public void getItemNotFoundTest() {
+    // Partition: ID=999 (ABOVE maximum existing ID - non-existent)
     Item retrieved = dataService.getItem(999);
     assertNull(retrieved);
   }
 
   @Test
+  public void getItemWithZeroIdTest() {
+    // Partition: ID=0 (BELOW minimum valid ID - invalid)
+    Item retrieved = dataService.getItem(0);
+    assertNull(retrieved);
+  }
+
+  @Test
+  public void getItemWithNegativeIdTest() {
+    // Partition: ID=-1 (BELOW minimum valid ID - invalid)
+    Item retrieved = dataService.getItem(-1);
+    assertNull(retrieved);
+  }
+
+  @Test
   public void getStoreTest() {
+    // Partition: Valid existing ID (typical valid)
     Store store = new Store(0, "Tech Store");
     Store added = dataService.addStore(store);
-    
+
     Store retrieved = dataService.getStore(added.getId());
     assertNotNull(retrieved);
     assertEquals(added.getId(), retrieved.getId());
   }
 
   @Test
+  public void getStoreNotFoundTest() {
+    // Partition: ID=999 (ABOVE maximum existing ID - invalid)
+    Store retrieved = dataService.getStore(999);
+    assertNull(retrieved);
+  }
+
+  @Test
+  public void getStoreWithZeroIdTest() {
+    // Partition: ID=0 (BELOW minimum valid ID - invalid)
+    Store retrieved = dataService.getStore(0);
+    assertNull(retrieved);
+  }
+
+  @Test
+  public void getStoreWithNegativeIdTest() {
+    // Partition: ID=-1 (BELOW minimum valid ID - invalid)
+    Store retrieved = dataService.getStore(-1);
+    assertNull(retrieved);
+  }
+
+  @Test
   public void getCouponTest() {
+    // Partition: Valid existing ID (typical valid)
     Store store = dataService.addStore(new Store(0, "Tech Store"));
     Coupon coupon = new TotalPriceCoupon(0, store.getId(), 10.0, true, 50.0);
     Coupon added = dataService.addCoupon(coupon);
-    
+
     Coupon retrieved = dataService.getCoupon(added.getId());
     assertNotNull(retrieved);
     assertEquals(added.getId(), retrieved.getId());
+  }
+
+  @Test
+  public void getCouponNotFoundTest() {
+    // Partition: ID=999 (ABOVE maximum existing ID - invalid)
+    Coupon retrieved = dataService.getCoupon(999);
+    assertNull(retrieved);
+  }
+
+  @Test
+  public void getCouponWithZeroIdTest() {
+    // Partition: ID=0 (BELOW minimum valid ID - invalid)
+    Coupon retrieved = dataService.getCoupon(0);
+    assertNull(retrieved);
+  }
+
+  @Test
+  public void getCouponWithNegativeIdTest() {
+    // Partition: ID=-1 (BELOW minimum valid ID - invalid)
+    Coupon retrieved = dataService.getCoupon(-1);
+    assertNull(retrieved);
   }
 
   @Test
@@ -214,7 +274,22 @@ public class DataServiceTest {
 
   @Test
   public void deleteItemNotFoundTest() {
+    // Partition: ID=999 (ABOVE maximum existing ID - invalid)
     boolean deleted = dataService.deleteItem(999);
+    assertFalse(deleted);
+  }
+
+  @Test
+  public void deleteItemWithZeroIdTest() {
+    // Partition: ID=0 (BELOW minimum valid ID - invalid)
+    boolean deleted = dataService.deleteItem(0);
+    assertFalse(deleted);
+  }
+
+  @Test
+  public void deleteItemWithNegativeIdTest() {
+    // Partition: ID=-1 (BELOW minimum valid ID - invalid)
+    boolean deleted = dataService.deleteItem(-1);
     assertFalse(deleted);
   }
 

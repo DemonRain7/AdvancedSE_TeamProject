@@ -72,21 +72,64 @@ public class CategoryCouponTest {
 
   @Test
   public void calculateDiscountWithPercentageTest() {
+    // Partition: discountValue=20.0% (typical percentage)
     double discount = percentageCoupon.calculateDiscount(cartItems);
     assertEquals(10.0, discount, 0.001);  // 20% of 50 (30 + 20)
   }
 
   @Test
+  public void calculateDiscountWithZeroPercentageTest() {
+    // Partition: discountValue=0.0% (AT minimum boundary)
+    CategoryCoupon zeroCoupon = new CategoryCoupon(5, 1, 0.0, true, "books");
+    double discount = zeroCoupon.calculateDiscount(cartItems);
+    assertEquals(0.0, discount, 0.001);
+  }
+
+  @Test
+  public void calculateDiscountWithMaxPercentageTest() {
+    // Partition: discountValue=100.0% (AT maximum boundary)
+    CategoryCoupon maxCoupon = new CategoryCoupon(6, 1, 100.0, true, "books");
+    double discount = maxCoupon.calculateDiscount(cartItems);
+    assertEquals(50.0, discount, 0.001);  // 100% of 50 (30 + 20)
+  }
+
+  @Test
   public void calculateDiscountWithFixedAmountTest() {
+    // Partition: discountValue=10.0 (fixed amount)
     double discount = fixedCoupon.calculateDiscount(cartItems);
     assertEquals(10.0, discount, 0.001);
   }
 
   @Test
+  public void calculateDiscountWithZeroFixedAmountTest() {
+    // Partition: discountValue=0.0 (AT minimum boundary - fixed)
+    CategoryCoupon zeroFixedCoupon = new CategoryCoupon(7, 1, 0.0, false, "books");
+    double discount = zeroFixedCoupon.calculateDiscount(cartItems);
+    assertEquals(0.0, discount, 0.001);
+  }
+
+  @Test
   public void calculateDiscountWhenNotApplicableTest() {
+    // Partition: category="electronics" (no items in cart with this category)
     CategoryCoupon electronicsCoupon = new CategoryCoupon(3, 1, 10.0, true, "electronics");
     double discount = electronicsCoupon.calculateDiscount(cartItems);
     assertEquals(0.0, discount, 0.001);
+  }
+
+  @Test
+  public void calculateDiscountWithLargeFixedAmountTest() {
+    // Partition: discountValue=100.0 (ABOVE category total - capped at category total)
+    CategoryCoupon largeCoupon = new CategoryCoupon(8, 1, 100.0, false, "books");
+    double discount = largeCoupon.calculateDiscount(cartItems);
+    assertEquals(50.0, discount, 0.001);  // Min of 100 and 50
+  }
+
+  @Test
+  public void calculateDiscountAtExactCategoryTotalTest() {
+    // Partition: discountValue=50.0 (AT category total boundary)
+    CategoryCoupon exactCoupon = new CategoryCoupon(9, 1, 50.0, false, "books");
+    double discount = exactCoupon.calculateDiscount(cartItems);
+    assertEquals(50.0, discount, 0.001);
   }
 
   @Test
