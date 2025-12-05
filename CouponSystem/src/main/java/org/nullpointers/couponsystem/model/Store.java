@@ -57,6 +57,11 @@ public class Store {
   }
 
   @Override
+  public int hashCode() {
+    return Integer.hashCode(id);
+  }
+
+  @Override
   public String toString() {
     return String.format("Store{id=%d, name='%s'}", id, name);
   }

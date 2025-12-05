@@ -54,7 +54,7 @@ public class RouteController {
   public ResponseEntity<?> createStore(@RequestBody Store store) {
     try {
       // Validate store name is not null or empty
-      if (store.getName() == null || store.getName().trim().isEmpty()) {
+      if (store.getName() == null || store.getName().isBlank()) {
         return new ResponseEntity<>("Store name cannot be empty.",
             HttpStatus.BAD_REQUEST);
       }
@@ -118,7 +118,7 @@ public class RouteController {
   public ResponseEntity<?> createItem(@RequestBody Item item) {
     try {
       // Validate item name is not null or empty
-      if (item.getName() == null || item.getName().trim().isEmpty()) {
+      if (item.getName() == null || item.getName().isBlank()) {
         return new ResponseEntity<>("Item name cannot be empty.",
             HttpStatus.BAD_REQUEST);
       }
@@ -260,7 +260,7 @@ public class RouteController {
         case "category":
           String category = (String) requestBody.get("category");
           // Validate category is not null or empty
-          if (category == null || category.trim().isEmpty()) {
+          if (category == null || category.isBlank()) {
             return new ResponseEntity<>("Category cannot be empty.",
                 HttpStatus.BAD_REQUEST);
           }

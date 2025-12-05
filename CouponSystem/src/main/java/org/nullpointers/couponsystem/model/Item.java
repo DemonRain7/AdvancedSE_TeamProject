@@ -102,6 +102,11 @@ public class Item {
   }
 
   @Override
+  public int hashCode() {
+    return Integer.hashCode(id);
+  }
+
+  @Override
   public String toString() {
     return String.format("Item{id=%d, name='%s', price=%.2f, storeId=%d, category='%s'}",
         id, name, price, storeId, category);

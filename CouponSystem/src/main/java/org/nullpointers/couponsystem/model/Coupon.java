@@ -114,5 +114,10 @@ public abstract class Coupon {
     Coupon coupon = (Coupon) obj;
     return id == coupon.id;
   }
+
+  @Override
+  public int hashCode() {
+    return Integer.hashCode(id);
+  }
 }
 
