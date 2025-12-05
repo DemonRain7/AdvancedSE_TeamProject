@@ -13,7 +13,7 @@ import org.springframework.test.context.ActiveProfiles;
  * Unit tests for the Store class.
  */
 @SpringBootTest
-@ActiveProfiles("test")
+@ActiveProfiles("test1")
 public class StoreTest {
   private Store testStore;
 

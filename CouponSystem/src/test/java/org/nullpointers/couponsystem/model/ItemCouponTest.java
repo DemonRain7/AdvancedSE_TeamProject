@@ -13,7 +13,7 @@ import org.springframework.test.context.ActiveProfiles;
  * Unit tests for the ItemCoupon class.
  */
 @SpringBootTest
-@ActiveProfiles("test")
+@ActiveProfiles("test1")
 public class ItemCouponTest {
   private ItemCoupon percentageCoupon;
   private ItemCoupon fixedCoupon;

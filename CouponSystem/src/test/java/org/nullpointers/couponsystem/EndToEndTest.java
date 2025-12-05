@@ -35,7 +35,7 @@ import org.springframework.test.context.ActiveProfiles;
  * - Scenario 3: Cart optimization and coupon selection
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("test")
+@ActiveProfiles("test1")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class EndToEndTest {
 

@@ -22,7 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
  * Unit tests for the DataService class.
  */
 @SpringBootTest
-@ActiveProfiles("test")
+@ActiveProfiles("test1")
 @Transactional
 public class DataServiceTest {
   @Autowired

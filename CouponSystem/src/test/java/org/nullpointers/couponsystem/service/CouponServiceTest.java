@@ -23,7 +23,7 @@ import org.springframework.test.context.ActiveProfiles;
  * Unit tests for the CouponService class using mocking.
  */
 @SpringBootTest
-@ActiveProfiles("test")
+@ActiveProfiles("test1")
 public class CouponServiceTest {
   private CouponService couponService;
   private DataService mockDataService;

@@ -14,7 +14,7 @@ import org.springframework.test.context.ActiveProfiles;
  * Unit tests for the Item class.
  */
 @SpringBootTest
-@ActiveProfiles("test")
+@ActiveProfiles("test1")
 public class ItemTest {
   private Item testItem;
 

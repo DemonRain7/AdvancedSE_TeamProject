@@ -30,7 +30,7 @@ import org.springframework.test.context.ActiveProfiles;
  * Unit tests for the RouteController class using mocking.
  */
 @SpringBootTest
-@ActiveProfiles("test")
+@ActiveProfiles("test1")
 public class RouteControllerTest {
   private RouteController controller;
   private DataService mockDataService;
