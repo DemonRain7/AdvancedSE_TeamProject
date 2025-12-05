@@ -60,6 +60,7 @@ public class CouponServiceTest {
 
   @Test
   public void findOptimalCouponWithValidCartTest() {
+    // Partition: itemIds array size=2 (typical valid)
     when(mockDataService.getItem(1)).thenReturn(testItems.get(0));
     when(mockDataService.getItem(2)).thenReturn(testItems.get(1));
     when(mockDataService.getCouponsByStore(1)).thenReturn(testCoupons);
@@ -71,7 +72,19 @@ public class CouponServiceTest {
   }
 
   @Test
+  public void findOptimalCouponWithSingleItemCartTest() {
+    // Partition: itemIds array size=1 (AT lower valid boundary)
+    when(mockDataService.getItem(1)).thenReturn(testItems.get(0));
+    when(mockDataService.getCouponsByStore(1)).thenReturn(testCoupons);
+
+    Coupon optimal = couponService.findOptimalCoupon(new int[]{1}, 1);
+
+    assertNotNull(optimal);  // ItemCoupon applies to single item
+  }
+
+  @Test
   public void findOptimalCouponWithNoApplicableCouponsTest() {
+    // Partition: itemIds array size=1 with no applicable coupons
     when(mockDataService.getItem(3)).thenReturn(testItems.get(2));
     when(mockDataService.getCouponsByStore(1)).thenReturn(testCoupons);
 
@@ -82,6 +95,7 @@ public class CouponServiceTest {
 
   @Test
   public void findOptimalCouponWithInvalidItemIdTest() {
+    // Partition: itemId=999 (ABOVE maximum existing ID - invalid)
     when(mockDataService.getItem(999)).thenReturn(null);
 
     Coupon optimal = couponService.findOptimalCoupon(new int[]{999}, 1);
@@ -90,7 +104,28 @@ public class CouponServiceTest {
   }
 
   @Test
+  public void findOptimalCouponWithZeroItemIdTest() {
+    // Partition: itemId=0 (BELOW minimum valid ID - invalid)
+    when(mockDataService.getItem(0)).thenReturn(null);
+
+    Coupon optimal = couponService.findOptimalCoupon(new int[]{0}, 1);
+
+    assertNull(optimal);
+  }
+
+  @Test
+  public void findOptimalCouponWithNegativeItemIdTest() {
+    // Partition: itemId=-1 (BELOW minimum valid ID - invalid)
+    when(mockDataService.getItem(-1)).thenReturn(null);
+
+    Coupon optimal = couponService.findOptimalCoupon(new int[]{-1}, 1);
+
+    assertNull(optimal);
+  }
+
+  @Test
   public void findOptimalCouponWithEmptyCartTest() {
+    // Partition: itemIds array size=0 (BELOW minimum valid size - invalid)
     Coupon optimal = couponService.findOptimalCoupon(new int[]{}, 1);
 
     assertNull(optimal);
@@ -98,9 +133,46 @@ public class CouponServiceTest {
 
   @Test
   public void findOptimalCouponWithNullItemIdsTest() {
+    // Partition: itemIds array is null (invalid)
     Coupon optimal = couponService.findOptimalCoupon(null, 1);
 
     assertNull(optimal);
+  }
+
+  @Test
+  public void findOptimalCouponWithLargeCartTest() {
+    // Partition: itemIds array size=4 (ABOVE typical size - valid)
+    when(mockDataService.getItem(1)).thenReturn(testItems.get(0));
+    when(mockDataService.getItem(2)).thenReturn(testItems.get(1));
+    when(mockDataService.getItem(3)).thenReturn(testItems.get(2));
+    when(mockDataService.getItem(4)).thenReturn(testItems.get(3));
+    when(mockDataService.getCouponsByStore(1)).thenReturn(testCoupons);
+
+    Coupon optimal = couponService.findOptimalCoupon(new int[]{1, 2, 3, 4}, 1);
+
+    assertNotNull(optimal);
+  }
+
+  @Test
+  public void findOptimalCouponWithZeroStoreIdTest() {
+    // Partition: storeId=0 (BELOW minimum valid ID - invalid)
+    when(mockDataService.getItem(1)).thenReturn(testItems.get(0));
+    when(mockDataService.getCouponsByStore(0)).thenReturn(new ArrayList<>());
+
+    Coupon optimal = couponService.findOptimalCoupon(new int[]{1}, 0);
+
+    assertNull(optimal);  // No coupons for invalid store
+  }
+
+  @Test
+  public void findOptimalCouponWithNegativeStoreIdTest() {
+    // Partition: storeId=-1 (BELOW minimum valid ID - invalid)
+    when(mockDataService.getItem(1)).thenReturn(testItems.get(0));
+    when(mockDataService.getCouponsByStore(-1)).thenReturn(new ArrayList<>());
+
+    Coupon optimal = couponService.findOptimalCoupon(new int[]{1}, -1);
+
+    assertNull(optimal);  // No coupons for invalid store
   }
 
   @Test
