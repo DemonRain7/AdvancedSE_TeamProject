@@ -176,6 +176,24 @@ cd CouponSystem
 ./mvnw pmd:check
 ```
 
+#### Most Recent PMD Results
+
+We have addressed several code quality issues identified by PMD static analysis.
+
+**Before Improvements:**
+
+![PMD Before Fix](images/pmd-before.png)
+
+**After Improvements:**
+
+![PMD After Fix](images/pmd-after.png)
+
+**Fixes Applied:**
+
+1. **Inefficient String Checking**: Replaced inefficient `trim().length() == 0` checks with `isBlank()` in `RouteController`.
+2. **Equals and HashCode**: Implemented missing `hashCode()` methods in `Coupon`, `Item`, and `Store` classes to ensure contract consistency with `equals()`.
+3. **Object Instantiation in Loops**: Optimized memory usage in `CouponService` by moving object instantiation (arrays) outside of loops and reusing them.
+
 ## API Documentation
 
 All endpoints return JSON responses unless otherwise specified.
