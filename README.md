@@ -618,9 +618,9 @@ This design allows multiple independent businesses to safely share the same cent
 
 ## End-to-End Testing
 
-The project includes comprehensive end-to-end (E2E) tests that verify the complete workflow of the client-service interaction.
+The project includes comprehensive end-to-end (E2E) and integration tests that verify the complete workflow of the client-service interaction, error handling, validation, and edge cases.
 
-**Note**: The automated E2E tests are the **primary and recommended method** for verifying all functionality, including detailed coupon operations, multi-client isolation, and concurrent access scenarios. The client application provides a basic demonstration, while these tests provide complete verification.
+**Note**: The automated E2E and integration tests are the **primary and recommended method** for verifying all functionality, including detailed coupon operations, multi-client isolation, concurrent access scenarios, validation errors, and boundary conditions. The client application provides a basic demonstration, while these tests provide complete verification.
 
 ### Automated End-to-End Tests
 
@@ -628,9 +628,12 @@ The project includes comprehensive end-to-end (E2E) tests that verify the comple
 The automated E2E tests are located in:
 ```
 CouponSystem/src/test/java/org/nullpointers/couponsystem/EndToEndTest.java
+CouponSystem/src/test/java/org/nullpointers/couponsystem/IntegrationTest.java
 ```
 
 #### What the Tests Cover
+
+##### EndToEndTest.java
 
 The `EndToEndTest` class contains five comprehensive test scenarios:
 
@@ -660,20 +663,149 @@ The `EndToEndTest` class contains five comprehensive test scenarios:
    - Simulates multiple clients making simultaneous requests
    - Verifies data integrity under concurrent access
 
+##### IntegrationTest.java
+
+The `IntegrationTest` class provides comprehensive coverage for validation, error handling, and edge cases organized into nested test classes:
+
+**Database Configuration Options:**
+
+The integration tests can be configured to use either:
+
+1. **H2 In-Memory Database (Recommended for CI/CD)**
+   - Uses `@ActiveProfiles("test")` annotation
+   - Requires `application-test.properties` in `src/test/resources/`
+   - Requires H2 dependency in `pom.xml`
+   - Database is created fresh for each test run and destroyed after
+   - No cleanup logic needed
+
+2. **PostgreSQL Database (Production-like testing)**
+   - Uses the same database as the application
+   - Includes `@AfterAll` cleanup logic to remove test data
+   - Tests interact with real database operations
+
+**Test Categories:**
+
+1. **StoreValidationTests**
+   - Empty/null/whitespace store name validation (400 responses)
+   - Non-existent store retrieval (404 responses)
+   - Delete non-existent store (404 responses)
+
+2. **ItemValidationTests**
+   - Empty item name validation
+   - Negative price validation
+   - Non-existent store reference validation
+   - Item not found scenarios (404 responses)
+   - Delete non-existent item handling
+
+3. **CouponValidationTests**
+   - Negative discount value validation
+   - Percentage discount > 100% validation
+   - Negative minimum purchase validation
+   - Empty/null category validation for CategoryCoupon
+   - Non-existent target item validation for ItemCoupon
+   - Invalid coupon type validation
+   - Non-existent store reference validation
+   - Coupon not found scenarios (404 responses)
+
+4. **GetEndpointTests**
+   - GET `/item/{id}` - existing and non-existent items
+   - GET `/items` - retrieve all items
+   - GET `/coupon/{id}` - existing and non-existent coupons
+   - GET `/coupons` - retrieve all coupons
+   - GET `/items/search?keyword=xxx` - keyword search (case-insensitive)
+   - GET `/items/category/{category}` - category filtering
+   - Empty search results handling
+
+5. **ItemCouponWorkflowTests**
+   - Complete ItemCoupon creation and usage workflow
+   - Target item discount application
+   - Non-target item handling
+   - Mixed cart scenarios
+
+6. **BoundaryConditionTests**
+   - Cart just below threshold ($49 vs $50 minimum)
+   - Cart exactly at threshold ($50 = $50 minimum)
+   - Cart just above threshold ($51 > $50 minimum)
+   - Empty cart validation
+   - Non-existent item in cart validation
+   - Missing parameters for `/stores/optimal`
+   - No matching items scenarios
+
+7. **SuggestItemsValidationTests**
+   - Empty cart validation
+   - Non-existent item in cart
+   - Non-existent coupon handling
+
+8. **SingleItemCartTests**
+   - Single high-value item qualifying for coupon
+
+9. **ZeroPriceTests**
+   - Zero price item creation (valid edge case)
+
+10. **CouponComparisonTests**
+    - Multiple coupon types comparison (TotalPriceCoupon vs CategoryCoupon vs ItemCoupon)
+    - Best coupon selection algorithm verification
+
 #### Running the Automated Tests
 
-To run the E2E tests:
+To run all E2E and integration tests:
+
+```bash
+cd CouponSystem
+./mvnw test -Dtest=EndToEndTest,IntegrationTest
+```
+
+To run only EndToEndTest:
 
 ```bash
 cd CouponSystem
 ./mvnw test -Dtest=EndToEndTest
 ```
 
-Or to run all tests including E2E:
+To run only IntegrationTest:
+
+```bash
+cd CouponSystem
+./mvnw test -Dtest=IntegrationTest
+```
+
+Or to run all tests including unit tests:
 
 ```bash
 cd CouponSystem
 ./mvnw test
+```
+
+#### Setting Up H2 for Integration Tests (Recommended)
+
+To use H2 in-memory database for integration tests:
+
+1. **Add H2 dependency to `pom.xml`:**
+```xml
+<dependency>
+    <groupId>com.h2database</groupId>
+    <artifactId>h2</artifactId>
+    <scope>test</scope>
+</dependency>
+```
+
+2. **Create `src/test/resources/application-test.properties`:**
+```properties
+spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+spring.datasource.username=sa
+spring.datasource.password=
+spring.datasource.driver-class-name=org.h2.Driver
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.H2Dialect
+spring.jpa.hibernate.ddl-auto=create-drop
+```
+
+3. **Add `@ActiveProfiles("test")` annotation to test classes:**
+```java
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test")
+class IntegrationTest {
+    // ...
+}
 ```
 
 The tests will:
@@ -1701,13 +1833,17 @@ curl http://localhost:8080/items/store/5
 
 5. **Coverage Summary**:
    - Total endpoints: 20
-   - Total tests: 75+ (average 3-4 per endpoint)
-   - Typical valid inputs: 20+ tests
-   - Atypical valid inputs: 20+ tests
-   - Invalid inputs: 20+ tests
-   - Write operations: 15+ tests
-   - Read operations: 30+ tests
+   - Total manual tests: 75+ (average 3-4 per endpoint)
+   - Total automated integration tests: 50+ (in IntegrationTest.java)
+   - Typical valid inputs: 30+ tests
+   - Atypical valid inputs: 30+ tests
+   - Invalid inputs/error handling: 30+ tests
+   - Boundary condition tests: 10+ tests
+   - Write operations: 20+ tests
+   - Read operations: 40+ tests
    - Multi-client tests: 6 tests
+   - ItemCoupon workflow tests: 5 tests
+   - Coupon comparison tests: 2 tests
 
 ### Expected Results
 
