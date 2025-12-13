@@ -5,7 +5,8 @@
 # Then run the script: ./test-api.sh
 
 # Allow BASE_URL to be overridden via environment variable (default: localhost for local/CI testing)
-BASE_URL="${BASE_URL:-http://localhost:8080}"
+# TEST API: https://advancedse-teamproject-549471368780.us-central1.run.app
+BASE_URL="https://advancedse-teamproject-549471368780.us-central1.run.app" 
 PASS_COUNT=0
 FAIL_COUNT=0
 
